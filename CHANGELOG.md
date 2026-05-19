@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2026-05-19
+
+### Features
+
+- **Distributed QA Pipeline:** Introduce a specialized QA pipeline skill with
+  dedicated sub-agents for distributed analysis and testing.
+- **Sentry MCP Integration:** Add native support for Sentry MCP server in the
+  `setup-mcp` flow.
+
+### Fixes
+
+- **Plugin Commands:** Correct typo in the plugin install command for better
+  reliability.
+
 ## [0.7.0] - 2026-05-07
 
 ### Features

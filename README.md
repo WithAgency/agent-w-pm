@@ -102,17 +102,17 @@ This single command will:
 1. **Register and configure** the following MCP servers in your OpenCode config
    (`~/.config/opencode/opencode.json`):
 
-   | Server           | Type          | Auth         | Description                          |
-   | ---------------- | ------------- | ------------ | ------------------------------------ |
-   | `figma`          | Remote        | OAuth        | Figma design integration             |
-   | `linear`         | Remote        | OAuth        | Linear issue tracking                |
-   | `chrome-devtools`| Local         | None         | Chrome DevTools browser automation   |
-   | `sentry`         | Remote/Local  | OAuth/Token  | Sentry error tracking & debugging    |
+    | Server            | Type         | Auth        | Description                        |
+    | ----------------- | ------------ | ----------- | ---------------------------------- |
+    | `figma`           | Remote       | OAuth       | Figma design integration           |
+    | `linear`          | Remote       | OAuth       | Linear issue tracking              |
+    | `chrome-devtools` | Local        | None        | Chrome DevTools browser automation |
+    | `sentry`          | Remote/Local | OAuth/Token | Sentry error tracking & debugging  |
 
-   > **Sentry:** During setup you will be prompted for your Sentry instance URL.
-   > Press Enter to accept the default (`https://sentry.io`) for the SaaS
-   > version. For self-hosted instances, enter your custom URL and provide an
-   > access token when prompted.
+    > **Sentry:** During setup you will be prompted for your Sentry instance
+    > URL. Press Enter to accept the default (`https://sentry.io`) for the SaaS
+    > version. For self-hosted instances, enter your custom URL and provide an
+    > access token when prompted.
 
 2. **Authenticate** each server that requires OAuth by running
    `opencode mcp auth <name>`, which opens a browser window for you to
