@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0] - 2026-05-19
+
+### Features
+
+- **Linear Review Skill:** Add a specialized skill for reviewing Linear issues
+  to improve issue-driven workflows. This initial version focuses on workflow
+  improvement, with full agent capabilities planned for future updates. Link to
+  #4.
+
 ## [0.8.0] - 2026-05-19
 
 ### Features
