@@ -145,6 +145,23 @@ globally:
 npm link
 agent-w install
 ```
+In order to use your local agent into another project:
+```bash
+cd /path/to/other-project
+npm link @model-w/agent-w
+
+opencode plugin @model-w/agent-w
+agent-w setup-mcp
+```
+
+If opencode doesn't pick your latest skill or agent changes, you can simply:
+
+```bash
+cd /path/to/other-project
+opencode plugin /absolute/path/to/agent-w
+```
+
+opencode must be restarted for agent-w changes to take effect.
 
 ### Adding a New MCP Server
 
