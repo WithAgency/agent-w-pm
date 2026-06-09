@@ -1,0 +1,45 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "pm-planner",
+  "agent": {
+    "pm-planner": {
+      "description": "Project Manager planner agent, read-only.",
+      "mode": "primary",
+      "permission": {
+        "read": "allow",
+        "grep": "allow",
+        "glob": "allow",
+        "list": "allow",
+        "question": "allow",
+        "websearch": "allow",
+        "write": "deny",
+        "edit": "deny",
+        "patch": "deny",
+        "bash": "deny",
+        "task": "deny",
+        "linear_*": "deny",
+        "linear_list_*": "allow",
+        "linear_get_*": "allow",
+        "linear_extract_*": "allow",
+        "linear_search_*": "allow",
+        "sentry_*": "deny",
+        "sentry_find_*": "allow",
+        "sentry_get_*": "allow",
+        "sentry_search_*": "allow",
+        "sentry_analyze_*": "allow",
+        "figma_*": "deny",
+        "figma_get_*": "allow",
+        "figma_search_*": "allow",
+        "figma_whoami": "allow",
+        "skill": {
+          "model-w-docs-generate": "allow",
+          "*": "deny"
+        }
+      },
+      "prompt": "You are a read-only project management assistant. You can read Linear, Sentry, and Figma data but cannot create, update, or delete them. Do not attempt to modify files or run bash commands."
+    },
+    "build": {
+      "disable": true
+    }
+  }
+}

@@ -446,16 +446,18 @@ const showHelp = () => {
     console.log(`
 ${colors.cyan}Agent W - CLI${colors.reset}
 
-Usage: 
+Usage:
   agent-w <command> [options]
 
 Commands:
-  install [destination]            Install the Model W skill. 
+  install [destination]            Install the Model W skill.
                                    Defaults to ${colors.yellow}~/.agents/skills${colors.reset}.
   setup-mcp [configPath]           Setup MCP servers for OpenCode.
                                    Servers: ${colors.cyan}${serverNames}${colors.reset}.
                                    Defaults to ${colors.yellow}~/.config/opencode/opencode.json${colors.reset}.
                                    Automatically triggers OAuth for servers that need it.
+  setup-pm                         Setup PM agent configuration in OpenCode.
+                                   Updates ${colors.yellow}~/.config/opencode/opencode.json${colors.reset}.
 
 Options:
   -h, --help                       Show this help message.
@@ -464,6 +466,7 @@ Example:
   agent-w install
   agent-w setup-mcp
   agent-w setup-mcp ~/.config/opencode/opencode.json
+  agent-w setup-pm
 `);
 };
 
@@ -606,6 +609,97 @@ if (command === "install") {
             process.exit(1);
         }
     })();
+} else if (command === "setup-pm") {
+    const configPath = path.join(
+        os.homedir(),
+        ".config",
+        "opencode",
+        "opencode.json"
+    );
+    const configDir = path.dirname(configPath);
+
+    console.log(
+        `${colors.blue}Setting up PM agent configuration for OpenCode...${colors.reset}`
+    );
+    console.log(`Config path: ${colors.yellow}${configPath}${colors.reset}\n`);
+
+    try {
+        // Check if OpenCode config directory exists
+        if (!fs.existsSync(configDir)) {
+            console.error(
+                `${colors.red}Error: OpenCode is not installed.${colors.reset}`
+            );
+            console.error(
+                `${colors.red}Directory not found: ${configDir}${colors.reset}`
+            );
+            console.log(
+                `\n${colors.yellow}Please install OpenCode first or run 'agent-w setup-mcp' to initialize the config.${colors.reset}`
+            );
+            process.exit(1);
+        }
+
+        // Load existing config or create new one
+        let configObj = {};
+        if (fs.existsSync(configPath)) {
+            try {
+                configObj = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+                // Create timestamped backup
+                const timestamp = new Date()
+                    .toISOString()
+                    .replace(/:/g, "")
+                    .replace(/\..+/, "")
+                    .replace("T", "-");
+                const backupPath = `${configPath}.${timestamp}.bak`;
+                fs.copyFileSync(configPath, backupPath);
+                console.log(
+                    `${colors.cyan}✔ Backup created: ${backupPath}${colors.reset}\n`
+                );
+            } catch (e) {
+                console.error(
+                    `${colors.yellow}⚠ Failed to parse existing config. Creating new config.${colors.reset}\n`
+                );
+                configObj = {};
+            }
+        }
+
+        // Load PM template
+        const templatePath = path.join(
+            __dirname,
+            "..",
+            ".config",
+            "opencode-pm.json"
+        );
+        if (!fs.existsSync(templatePath)) {
+            console.error(
+                `${colors.red}Error: PM template not found at ${templatePath}${colors.reset}`
+            );
+            process.exit(1);
+        }
+
+        const pmTemplate = JSON.parse(fs.readFileSync(templatePath, "utf-8"));
+
+        // Merge PM config into existing config
+        configObj.$schema = pmTemplate.$schema;
+        configObj.default_agent = pmTemplate.default_agent;
+        if (!configObj.agent) configObj.agent = {};
+        configObj.agent["pm-planner"] = pmTemplate.agent["pm-planner"];
+        configObj.agent["build"] = pmTemplate.agent["build"];
+
+        // Write updated config
+        fs.writeFileSync(configPath, JSON.stringify(configObj, null, 2));
+        console.log(
+            `${colors.green}✔ PM agent configuration updated successfully!${colors.reset}`
+        );
+        console.log(
+            `${colors.green}  Default agent set to: pm-planner${colors.reset}`
+        );
+    } catch (error) {
+        console.error(
+            `${colors.red}Error setting up PM configuration:${colors.reset}`,
+            error.message
+        );
+        process.exit(1);
+    }
 } else {
     console.error(`${colors.red}Unknown command: ${command}${colors.reset}`);
     showHelp();
