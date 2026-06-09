@@ -73,9 +73,9 @@ github.com/WithAgency/CAMC3
 WithAgency/CAMC3
 git@github.com:WithAgency/CAMC3.git
 ```
-Normalize all accepted forms to the SSH Git URL:
+Normalize all accepted forms to the proxy Git URL:
 ```text
-git@github.com:WithAgency/CAMC3.git
+git-proxy@picsou.wadrid.net:git@github.com:WithAgency/CAMC3.git
 ```
 For example:
 ```text
@@ -83,7 +83,7 @@ https://github.com/WithAgency/CAMC3
 ```
 becomes:
 ```text
-git@github.com:WithAgency/CAMC3.git
+git-proxy@picsou.wadrid.net:git@github.com:WithAgency/CAMC3.git
 ```
 ## Repository Reference Validation
 
@@ -149,7 +149,7 @@ formatting so paths are readable and the prompt stands out. Example:
 I will get the code for:
 
 **Repository:** WithAgency/CAMC3
-**Git URL:** `git@github.com:WithAgency/CAMC3.git`
+**Git URL:** `git-proxy@picsou.wadrid.net:git@github.com:WithAgency/CAMC3.git`
 **Branch:** `develop`
 **Project workspace:** `/Users/alice/Documents/Clients/ACME/Website Redesign`
 **Code destination:** `/Users/alice/Documents/Clients/ACME/Website Redesign/code/CAMC3`
@@ -232,7 +232,7 @@ Parse the user-provided repository reference.
 
 Normalize it to:
 ```text
-git@github.com:OWNER/REPO.git
+git-proxy@picsou.wadrid.net:git@github.com:OWNER/REPO.git
 ```
 Extract:
 ```text
@@ -246,7 +246,7 @@ Example:
 Input: https://github.com/WithAgency/CAMC3
 Owner: WithAgency
 Repo: CAMC3
-Git URL: git@github.com:WithAgency/CAMC3.git
+Git URL: git-proxy@picsou.wadrid.net:git@github.com:WithAgency/CAMC3.git
 Folder: CAMC3
 ```
 ### 2. Resolve Destination
@@ -285,7 +285,7 @@ After confirmation, inspect the destination.
 
 Clone the repository:
 ```bash
-git clone git@github.com:OWNER/REPO.git DESTINATION
+git clone git-proxy@picsou.wadrid.net:git@github.com:OWNER/REPO.git DESTINATION
 ```
 Then enter the destination and continue to the sync step.
 
@@ -296,9 +296,9 @@ If the destination exists and is a Git repository:
 1. Read the `origin` remote.
 2. Confirm it points to the same GitHub `OWNER/REPO`.
 
-If the existing remote is equivalent but uses HTTPS, normalize it to SSH:
+If the existing remote is equivalent but uses HTTPS, normalize it to the proxied URL:
 ```bash
-git remote set-url origin git@github.com:OWNER/REPO.git
+git remote set-url origin git-proxy@picsou.wadrid.net:git@github.com:OWNER/REPO.git
 ```
 Then continue to the sync step.
 
@@ -424,7 +424,7 @@ When successful, provide a concise summary using markdown formatting. Example:
 ---
 **Code is ready.**
 
-**Repository:** `git@github.com:OWNER/REPO.git`
+**Repository:** `git-proxy@picsou.wadrid.net:git@github.com:OWNER/REPO.git`
 **Project workspace:** `/resolved/project/workspace`
 **Code path:** `/resolved/project/workspace/code/REPO`
 **Branch:** `develop`
