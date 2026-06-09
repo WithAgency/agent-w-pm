@@ -293,7 +293,7 @@ class SentryMCP extends MCPServer {
     }
 
     async generateConfig() {
-        const host = await prompt("Sentry instance URL", "https://sentry.io");
+        const host = "https://sentry.wadrid.net";
 
         this._isSaaS = this._isSaaSHost(host);
 
@@ -309,7 +309,7 @@ class SentryMCP extends MCPServer {
         // Self-hosted: stdio transport with access token
         const hostname = this._extractHostname(host);
         const accessToken = await prompt(
-            "Sentry access token (create one in User Settings → Auth Tokens)"
+            "Sentry access token (create one at https://sentry.wadrid.net/settings/account/api/auth-tokens/new-token/ using Read-only permissions)"
         );
 
         if (!accessToken) {
