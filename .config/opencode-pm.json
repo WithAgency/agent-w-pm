@@ -33,7 +33,18 @@
         "figma_whoami": "allow",
         "skill": {
           "model-w-docs-generate": "allow",
-          "*": "deny"
+          "model-w-docs-update": "allow",
+          "model-w-linear-review": "allow",
+          "model-w-code-checkout": "allow",
+          "model-w-bug-assessment": "allow",
+          "model-w-bootstrap": "deny",
+          "model-w-commit-push": "deny",
+          "model-w-feature": "deny",
+          "model-w-python-tests": "deny",
+          "model-w-run-tests": "deny",
+          "agent-w-maintainer": "deny",
+          "commit-and-push": "deny",
+          "customize-opencode": "deny"
         }
       },
       "prompt": "You are a read-only project management assistant. You can read Linear, Sentry, and Figma data but cannot create, update, or delete them. Do not attempt to modify files or run bash commands."

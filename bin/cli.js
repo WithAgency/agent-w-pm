@@ -458,6 +458,7 @@ Commands:
                                    Automatically triggers OAuth for servers that need it.
   setup-pm                         Setup PM agent configuration in OpenCode.
                                    Updates ${colors.yellow}~/.config/opencode/opencode.json${colors.reset}.
+                                   Copies allowed PM skills to ${colors.yellow}~/.config/opencode/skills/${colors.reset}.
 
 Options:
   -h, --help                       Show this help message.
@@ -693,6 +694,70 @@ if (command === "install") {
         console.log(
             `${colors.green}  Default agent set to: pm-planner${colors.reset}`
         );
+
+        // Copy allowed skills to ~/.config/opencode/skills/
+        console.log(
+            `\n${colors.blue}Copying PM skills to OpenCode...${colors.reset}`
+        );
+        const skillsDestBase = path.join(configDir, "skills");
+        if (!fs.existsSync(skillsDestBase)) {
+            fs.mkdirSync(skillsDestBase, { recursive: true });
+        }
+
+        // Extract allowed skills from PM template
+        const skillPermissions =
+            pmTemplate.agent["pm-planner"].permission.skill;
+        const allowedSkills = Object.keys(skillPermissions).filter(
+            (skill) => skillPermissions[skill] === "allow" && skill !== "*"
+        );
+
+        const skillsSrcBase = path.join(__dirname, "..", "skills");
+        let copiedCount = 0;
+        let skippedCount = 0;
+
+        for (const skillName of allowedSkills) {
+            const srcSkillPath = path.join(skillsSrcBase, skillName);
+            const destSkillPath = path.join(skillsDestBase, skillName);
+
+            if (!fs.existsSync(srcSkillPath)) {
+                console.log(
+                    `  ${colors.yellow}⚠ Skill not found: ${skillName}${colors.reset}`
+                );
+                skippedCount++;
+                continue;
+            }
+
+            // Create destination directory
+            if (!fs.existsSync(destSkillPath)) {
+                fs.mkdirSync(destSkillPath, { recursive: true });
+            }
+
+            // Copy SKILL.md file
+            const srcFile = path.join(srcSkillPath, "SKILL.md");
+            const destFile = path.join(destSkillPath, "SKILL.md");
+
+            if (fs.existsSync(srcFile)) {
+                fs.copyFileSync(srcFile, destFile);
+                console.log(
+                    `  ${colors.green}✔ ${skillName}${colors.reset}`
+                );
+                copiedCount++;
+            } else {
+                console.log(
+                    `  ${colors.yellow}⚠ SKILL.md not found in ${skillName}${colors.reset}`
+                );
+                skippedCount++;
+            }
+        }
+
+        console.log(
+            `\n${colors.green}✔ Copied ${copiedCount} skill(s) to ${skillsDestBase}${colors.reset}`
+        );
+        if (skippedCount > 0) {
+            console.log(
+                `${colors.yellow}  ${skippedCount} skill(s) skipped (not found)${colors.reset}`
+            );
+        }
     } catch (error) {
         console.error(
             `${colors.red}Error setting up PM configuration:${colors.reset}`,
