@@ -1,8 +1,9 @@
 ---
 name: model-w-code-checkout
 description:
-    Clones or refreshes a Model W GitHub repository so the local checkout exactly
-    matches origin/develop for grounding, review, and analysis.
+    Use this skill when the user asks to fetch, get, clone, pull, sync, or checkout
+    code/repository. Clones or refreshes a Model W GitHub repository so the local
+    checkout exactly matches origin/develop for grounding, review, and analysis.
 license: WTFPL
 metadata:
     author: with-madrid.com
@@ -55,11 +56,14 @@ For commit and push operations, use `model-w-commit-push` instead.
 Use this skill when the user asks for things like:
 
 - "Get the code of https://github.com/WithAgency/CAMC3"
+- "Fetch code of cartier-pickup"
 - "Pull the latest code for WithAgency/CAMC3"
 - "Sync the code for this project"
 - "Clone this repo"
+- "Checkout the ACME project"
 - "Prepare the repo locally for review"
 - "Update my local copy of the code"
+- "I need the codebase for project-name"
 
 ## Inputs
 

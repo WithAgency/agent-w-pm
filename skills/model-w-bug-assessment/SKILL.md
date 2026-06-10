@@ -1,9 +1,10 @@
 ---
 name: model-w-bug-assessment
 description:
-    Assesses and qualifies bugs for triage decisions using Sentry, codebase analysis,
-    git blame, and optional browser reproduction. Produces business impact analysis,
-    criticality rating, and BDD test recommendations.
+    Use this skill when the user asks to assess, analyze, triage, qualify, or investigate
+    a bug, error, issue, or Sentry event. Provides business impact analysis, criticality
+    rating, user scope, root cause, ownership classification, and BDD test recommendations
+    for better triage decisions.
 license: WTFPL
 metadata:
     author: with-madrid.com

@@ -124,13 +124,42 @@ You can optionally pass a custom config path:
 agent-w setup-mcp ~/.config/opencode/opencode.json
 ```
 
-#### Examples of what you can ask:
+### Setting Up PM Agent
 
-- "Update all dependencies to the latest Model W release."
-- "Check if the project's linting and formatting rules are followed."
-- "Run the smoke tests for both the Django API and the SvelteKit frontend."
-- "Create a changelog for the latest updates I just made."
-- "Figure out how to run the BDD tests for this project."
+Agent W includes a specialized **Project Manager (PM) agent** configuration for
+read-only project management tasks. This setup is ideal for PMs who need to
+review Linear tickets, analyze Sentry issues, assess bugs, and work with Figma
+designs without modifying code.
+
+```bash
+agent-w setup-pm
+```
+
+This command will:
+
+1. **Configure the PM agent** in your OpenCode config
+   (`~/.config/opencode/opencode.json`):
+   - Sets `pm-planner` as the default agent
+   - Configures read-only permissions (can read but cannot write/edit/bash)
+   - Allows access to Linear, Sentry, and Figma MCP tools (read-only)
+
+2. **Copy PM-specific skills** to `~/.config/opencode/skills/`:
+   - `model-w-linear-review` - Review Linear ticket specifications
+   - `model-w-code-checkout` - Clone/sync repositories for analysis
+   - `model-w-bug-assessment` - Assess bugs from Sentry for triage
+   - `model-w-docs-generate` - Generate project documentation
+
+The PM agent is designed to be **safe and read-only** — it cannot create
+commits, modify files, or run bash commands, making it ideal for non-technical
+users who need to work with development artifacts.
+
+#### Examples of what you can ask the PM agent:
+
+- "Review this Linear ticket: https://linear.app/company/issue/ENG-123"
+- "Get the code for WithAgency/CAMC3 and analyze the authentication flow"
+- "Assess this Sentry bug: https://sentry.io/issues/12345/"
+- "What's the business impact of the recent cart abandonment errors?"
+- "Generate documentation for this project"
 
 ## For Contributors
 

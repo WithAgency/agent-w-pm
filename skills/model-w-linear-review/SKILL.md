@@ -1,9 +1,9 @@
 ---
 name: model-w-linear-ticket-review
 description:
-    Review a Linear ticket specification from a direct Linear issue link and
-    provide concise, constructive feedback about gaps, ambiguity, missing
-    acceptance criteria, and missing key test scenarios.
+    Use this skill when the user asks to review, assess, analyze, or evaluate a Linear
+    ticket, issue, or specification. Reviews Linear tickets for gaps, ambiguity, missing
+    acceptance criteria, test scenarios, and design completeness.
 license: WTFPL
 metadata:
     author: with-madrid.com

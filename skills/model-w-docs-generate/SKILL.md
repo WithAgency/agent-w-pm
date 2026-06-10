@@ -1,8 +1,9 @@
 ---
 name: model-w-docs-generate
 description:
-    Generates project-level documentation from scratch using Zensical. Produces
-    a full perspective-based documentation tree via recursive sub-agents.
+    Use this skill when the user asks to generate, create, or build project documentation
+    from scratch. Produces a full perspective-based documentation tree (User, Admin, Tester,
+    Developer) using Zensical via recursive sub-agents.
 license: WTFPL
 metadata:
     author: with-madrid.com
