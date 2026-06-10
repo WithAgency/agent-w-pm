@@ -4,6 +4,7 @@ description:
     Use this skill when the user asks to fetch, get, clone, pull, sync, or checkout
     code/repository. Clones or refreshes a Model W GitHub repository so the local
     checkout exactly matches origin/develop for grounding, review, and analysis.
+    Assumes WithAgency as the default owner if only repo name is provided.
 license: WTFPL
 metadata:
     author: with-madrid.com
@@ -75,19 +76,29 @@ https://github.com/WithAgency/CAMC3
 https://github.com/WithAgency/CAMC3.git
 github.com/WithAgency/CAMC3
 WithAgency/CAMC3
+CAMC3                                    (assumes WithAgency owner)
+cartier-pickup                           (assumes WithAgency owner)
 git@github.com:WithAgency/CAMC3.git
 ```
+
+**Default Owner**: If only a repository name is provided (e.g., "cartier-pickup", "CAMC3"),
+assume the owner is **WithAgency**. Do NOT ask the user for the owner.
+
 Normalize all accepted forms to the proxy Git URL:
 ```text
 git-proxy@picsou.wadrid.net:git@github.com:WithAgency/CAMC3.git
 ```
-For example:
+
+Examples:
 ```text
-https://github.com/WithAgency/CAMC3
-```
-becomes:
-```text
-git-proxy@picsou.wadrid.net:git@github.com:WithAgency/CAMC3.git
+Input: https://github.com/WithAgency/CAMC3
+Output: git-proxy@picsou.wadrid.net:git@github.com:WithAgency/CAMC3.git
+
+Input: cartier-pickup
+Output: git-proxy@picsou.wadrid.net:git@github.com:WithAgency/cartier-pickup.git
+
+Input: WithAgency/ACME
+Output: git-proxy@picsou.wadrid.net:git@github.com:WithAgency/ACME.git
 ```
 ## Repository Reference Validation
 
@@ -234,24 +245,34 @@ This skill only gets the code.
 
 Parse the user-provided repository reference.
 
+**If only a repository name is provided** (e.g., "cartier-pickup"), **assume the owner is WithAgency**.
+
 Normalize it to:
 ```text
 git-proxy@picsou.wadrid.net:git@github.com:OWNER/REPO.git
 ```
 Extract:
 ```text
-OWNER
+OWNER (default: WithAgency)
 REPO
 ```
 The local folder name should be the repository name, without `.git`.
 
-Example:
+Examples:
 ```text
 Input: https://github.com/WithAgency/CAMC3
 Owner: WithAgency
 Repo: CAMC3
 Git URL: git-proxy@picsou.wadrid.net:git@github.com:WithAgency/CAMC3.git
 Folder: CAMC3
+```
+
+```text
+Input: cartier-pickup
+Owner: WithAgency (assumed)
+Repo: cartier-pickup
+Git URL: git-proxy@picsou.wadrid.net:git@github.com:WithAgency/cartier-pickup.git
+Folder: cartier-pickup
 ```
 ### 2. Resolve Destination
 
