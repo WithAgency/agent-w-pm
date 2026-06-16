@@ -25,14 +25,33 @@ The user should provide a direct Linear ticket URL.
 
 If the user does not provide a Linear ticket URL or ticket number, ask them for one.
 
+Optionally, the user may also provide:
+
+- **Repository name** (if not provided, infer from Linear project or current working directory)
+
+## Expected Repository Layout
+
+This skill assumes the code is available at:
+
+```
+<current working directory>/code/<repo-name>
+```
+
+If the code is not present at this location, use the `model-w-code-checkout` skill first
+to get the latest code from `origin/develop` after confirming with the user.
+
 ## Process
 
 1. Read the Linear ticket using the Linear MCP server when available.
-2. Review the ticket title, description, acceptance criteria, labels, project,
+2. Infer the repository name from the Linear project if not explicitly provided.
+3. Locate the Code: Ensure the repository code is available at `<current working directory>/code/<repo-name>`.
+   - If not, ask the user if they want to check out the code using `model-w-code-checkout`.
+   - While code analysis is optional for a ticket review, it is highly recommended to ground the assessment in the actual implementation.
+4. Review the ticket title, description, acceptance criteria, labels, project,
    status, linked resources, and relevant comments if available.
-3. Extract any Figma links from the ticket description, comments, or attached
+5. Extract any Figma links from the ticket description, comments, or attached
    resources.
-4. If Figma links are found, analyze each design using the Figma MCP tool:
+6. If Figma links are found, analyze each design using the Figma MCP tool:
    - If the Figma MCP tool is not available, stop and tell the user that the
      Figma MCP integration is required to review designs and ask them to enable
      it before continuing.
@@ -42,12 +61,12 @@ If the user does not provide a Linear ticket URL or ticket number, ask them for 
    - Note any discrepancies between the designs and the written specification.
    - If a Figma link is present but the MCP cannot access it, flag it as a
      blocker in the review rather than skipping it silently.
-5. Do not invent missing requirements. If something is unclear or absent, call it
+7. Do not invent missing requirements. If something is unclear or absent, call it
    out as a gap, ambiguity, or question.
-6. Review the ticket from both a product/project-management perspective and a
+8. Review the ticket from both a product/project-management perspective and a
    developer/testing perspective.
-7. Keep the response concise, constructive, and actionable.
-8. If the Linear ticket cannot be accessed, ask the user to paste the ticket
+9. Keep the response concise, constructive, and actionable.
+10. If the Linear ticket cannot be accessed, ask the user to paste the ticket
    title, description, and acceptance criteria manually.
 
 ## Review Checklist
@@ -117,8 +136,10 @@ Evaluate the ticket for:
 
 ### Technical and Integration Risks
 
-- Are APIs, data models, migrations, background jobs, feature flags, or
-  third-party integrations implied but not considered?
+- Use the codebase to identify if APIs, data models, migrations, background jobs,
+  feature flags, or third-party integrations implied are consistent with the
+  current architecture.
+- Check for existing similar implementations in the code to ensure consistency.
 - Are analytics or tracking requirements needed?
 - Are security or performance concerns relevant?
 - Are there new privacy and personal data constraints or GDPR requirements?
@@ -126,7 +147,8 @@ Evaluate the ticket for:
 
 ### Test Scenarios
 
-Identify missing or unclear test scenarios, including:
+Identify missing or unclear test scenarios, referencing existing tests in the
+codebase for the affected features to identify coverage gaps:
 
 - Happy path
 - Validation failures
@@ -179,3 +201,13 @@ Figma links were present, omit this section entirely.)_
 - Do not assume requirements that are not present.
 - Phrase missing details as questions or suggested improvements.
 - If the ticket is already clear, say so and provide only minor improvement suggestions.
+
+### Error Handling
+
+### Code Not Available
+
+Ask:
+```
+The code for [repo-name] is not available at <current working directory>/code/<repo-name>.
+Would you like me to check out the code using model-w-code-checkout first to ground the review?
+```
