@@ -6,7 +6,7 @@ description:
     acceptance criteria, test scenarios, and design completeness.
 license: WTFPL
 metadata:
-    author: with-madrid.com
+author: with-madrid.com
 ---
 
 # Linear Ticket Review
@@ -139,6 +139,8 @@ Evaluate the ticket for:
 - Use the codebase to identify if APIs, data models, migrations, background jobs,
   feature flags, or third-party integrations implied are consistent with the
   current architecture.
+- Are APIs, data models, migrations, background jobs, feature flags, or
+  third-party integrations implied but not considered?
 - Check for existing similar implementations in the code to ensure consistency.
 - Are analytics or tracking requirements needed?
 - Are security or performance concerns relevant?
