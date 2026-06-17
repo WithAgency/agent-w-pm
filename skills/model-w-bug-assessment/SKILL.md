@@ -44,10 +44,11 @@ The user must provide **at least one** of the following:
 
 Optionally, the user may also provide:
 
+- **Environment**: If not provided, MUST ask the user if the issue happens in `production` or `development`.
 - **Repository name**: If not provided, use the `find` command trick in Step 1 to infer it from `code/`.
 - **Affected URL or feature** (for browser reproduction via Chrome MCP)
 
-If the repository is not clear, ask the user to specify it.
+If the repository or environment is not clear, ask the user to specify it.
 
 ## Expected Repository Layout
 
@@ -91,14 +92,22 @@ Perform the following steps in sequence:
    - If no repository is found or the `code/` directory is empty, ask the user for the repository name.
 3. **Mandatory Project Slug**: This `<repo-name>` MUST be used as the `projectSlug` for ALL Sentry MCP calls.
 
+#### Step 2: Identify the Environment
+1. **Determine the Environment**:
+   - If the environment (`production` or `development`) is provided, use it.
+   - If not provided BUT a Sentry issue URL or ID is provided, fetch the environment from Sentry in Step 3.
+   - If not provided AND no Sentry issue is provided, ask the user to specify where the issue is happening.
+2. **Filter by Environment**: Use this environment to filter Sentry events and issues in subsequent MCP calls.
+
 **CRITICAL: DO NOT HALLUCINATE PROJECT NAMES.** Even if a Sentry issue ID (like `OTHER-PROJ-123`) or URL suggests a different project, you MUST use the `<repo-name>` identified in Step 1. If there is a mismatch, stop and ask the user for clarification.
 
-#### Step 2: Fetch Bug Details from Sentry
+#### Step 3: Fetch Bug Details from Sentry
 
 **Strict Tool Restriction:**
 1. **Scope ALL calls**: Every Sentry tool call (e.g., `sentry_get_sentry_resource`, `sentry_list_events`, etc.) MUST include `projectSlug=<repo-name>` where `<repo-name>` is the one found in Step 1.
-2. **No broad searches**: Never call `sentry_find_projects` with only an `organizationSlug`.
-3. **Mismatched IDs**: If a user-provided Sentry Issue ID (e.g. `PROJ-123`) has a prefix that does not match your `<repo-name>`, do NOT change the `projectSlug`. Report the discrepancy to the user.
+2. **Environment Filtering**: When listing events or searching for issues, always apply the environment filter identified in Step 2.
+3. **No broad searches**: Never call `sentry_find_projects` with only an `organizationSlug`.
+4. **Mismatched IDs**: If a user-provided Sentry Issue ID (e.g. `PROJ-123`) has a prefix that does not match your `<repo-name>`, do NOT change the `projectSlug`. Report the discrepancy to the user.
 
 #### If a Sentry issue URL or ID is provided:
 - Use Sentry MCP to fetch issue details. You MUST scope the tool call to the identified project by passing `projectSlug=<repo-name>`.
@@ -113,8 +122,9 @@ Perform the following steps in sequence:
 - Confirm that the Sentry issue belongs to the identified repository/project.
 
 #### If a Sentry issue is not provided:
-- Proceed with the user-provided bug description.
-- Enforce the project scope (`projectSlug=<repo-name>`) for any subsequent Sentry searches to find related events or similar issues.
+- Proceed with the user-provided bug description, error message, or stack trace.
+- Attempt to find the relevant Sentry issue by searching with the provided error message or description, scoped to the identified project (`projectSlug=<repo-name>`) and environment.
+- If no matching Sentry issue is found, continue the assessment based on the available information (manual code analysis, business impact based on description, etc.).
 - Avoid listing all projects in the organization.
 
 ### 2. Locate the Code
@@ -256,6 +266,7 @@ Respond using this structure:
 
 **Sentry Issue**: [Link or ID, if applicable]
 **Repository**: [Repository name]
+**Environment**: [Environment name]
 **Analyzed at**: [Current timestamp]
 
 ---
