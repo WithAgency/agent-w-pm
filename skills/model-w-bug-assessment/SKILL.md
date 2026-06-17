@@ -44,7 +44,7 @@ The user must provide **at least one** of the following:
 
 Optionally, the user may also provide:
 
-- **Repository name** (if not provided, infer from Sentry project name or current working directory)
+- **Repository name**: If not provided, it must be inferred from the directory name in `cwd/code/<repo-name>`.
 - **Affected URL or feature** (for browser reproduction via Chrome MCP)
 
 If the repository is not clear, ask the user to specify it.
@@ -56,6 +56,8 @@ This skill assumes the code is available at:
 ```
 <current working directory>/code/<repo-name>
 ```
+
+The `<repo-name>` MUST be used as the Sentry project name to scope all Sentry MCP searches and queries.
 
 If the code is not present at this location, use the `model-w-code-checkout` skill first
 to get the latest code from `origin/develop` after confirming with the user.
@@ -79,9 +81,17 @@ Perform the following steps in sequence:
 
 ### 1. Fetch Bug Details from Sentry
 
-If a Sentry issue URL or ID is provided:
+1. Identify the repository name from the directory in `<current working directory>/code/<repo-name>`.
+2. This repository name MUST be used explicitly as the `projectSlug` parameter in every single Sentry MCP tool call.
+3. **Strict Tool Restriction:** Never call `sentry_find_projects` with only an `organizationSlug`. If you call `sentry_find_projects`, you are strictly required to pass both `organizationSlug` AND `projectSlug` (where `projectSlug` equals the `<repo-name>` identified above). Do not attempt to list or search for other projects.
 
-1. Use Sentry MCP to fetch:
+If a Sentry issue URL or ID is provided:
+- Use Sentry MCP to fetch issue details. You MUST scope the tool call to the identified project by passing `projectSlug=<repo-name>`.
+- Confirm that the Sentry issue belongs to the identified repository/project.
+
+If a Sentry issue is not provided, proceed with the user-provided bug description, but still enforce the project scope (`projectSlug=<repo-name>`) for any subsequent Sentry searches.
+
+1. Use Sentry MCP to fetch issue details, ensuring the search is scoped to the identified project by passing `projectSlug=<repo-name>`:
    - Error message and stack trace
    - First seen / last seen timestamps
    - Event count and frequency trends
@@ -90,9 +100,9 @@ If a Sentry issue URL or ID is provided:
    - Breadcrumbs and context
    - Related events
 
-2. Infer the repository name from the Sentry project name if not explicitly provided.
+2. Confirm that the Sentry issue belongs to the identified repository/project.
 
-If a Sentry issue is not provided, proceed with the user-provided bug description.
+If a Sentry issue is not provided, proceed with the user-provided bug description, but still use the project scope (`projectSlug=<repo-name>`) for any Sentry-wide searches. Avoid listing all projects in the organization.
 
 ### 2. Locate the Code
 
