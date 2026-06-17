@@ -12,395 +12,319 @@ metadata:
 
 # Model W Bug Assessment
 
-This skill helps project managers and QA leads **qualify and triage bugs** by analyzing
-them from multiple perspectives: business impact, affected users, root cause, ownership,
-and test coverage gaps.
+Use this skill to produce a concise, evidence-based bug assessment. The goal is triage and qualification, not implementation.
 
-The goal is to produce actionable triage information, not to fix the bug itself.
+## Critical Rules
 
-## When to Use This Skill
+1. **Infer the Sentry project from the repository**
+   - Inspect `./code/<repo-name>`.
+   - Use `<repo-name>` as the Sentry `projectSlug` for every Sentry call.
+   - Never infer or change the project from a Sentry URL, issue ID, or issue prefix.
+   - If multiple repositories exist, ask which repository to use.
+   - If no repository exists, ask for the repository name.
 
-Use this skill when:
+2. **Determine the environment**
+   - If the user provides an environment, use it.
+   - If a Sentry issue or URL is provided, retrieve the environment from Sentry.
+   - If the environment cannot be determined, ask:
+     > Is this happening in production, staging, or development?
+   - Never assume the environment.
 
-- A bug has been reported in Sentry or by users
-- You need to decide on priority and assignment
-- You need to understand business and user impact before scheduling work
-- You need to determine if a bug is regression or a new issue
-- You want to identify test coverage gaps
-
-Do not use this skill for:
-
-- Implementing bug fixes (use development skills instead)
-- Creating Linear tickets (use `model-w-linear-review` after assessment)
-- General code review
+3. **Never ask for a Sentry ID**
+   - Accept any of:
+     - Sentry URL
+     - Sentry issue ID
+     - Error message
+     - Stack trace
+     - Bug description
+   - If no Sentry issue is provided, search Sentry using the supplied details within the inferred project and environment.
+   - If no matching Sentry issue is found, continue with the available information.
 
 ## Inputs
 
-The user must provide **at least one** of the following:
+The user must provide at least one of:
 
-1. **Sentry issue URL or ID** (e.g., `https://sentry.io/organizations/org/issues/12345/` or `12345`)
-2. **Bug description** with steps to reproduce
-3. **Error message or stack trace**
+- Sentry issue URL
+- Sentry issue ID
+- Error message
+- Stack trace
+- Bug description
 
-Optionally, the user may also provide:
+Optional inputs:
 
-- **Environment**: If not provided, MUST ask the user if the issue happens in `production` or `development`.
-- **Repository name**: If not provided, use the `find` command trick in Step 1 to infer it from `code/`.
-- **Affected URL or feature** (for browser reproduction via Chrome MCP)
+- Environment
+- Affected URL
+- Affected feature or workflow
+- Steps to reproduce
 
-If the repository or environment is not clear, ask the user to specify it.
+## Required Integrations
 
-## Expected Repository Layout
+This skill requires Sentry MCP for Sentry-based assessment.
 
-This skill assumes the code is available at:
+If Sentry MCP is unavailable, stop and say:
 
-```
-<current working directory>/code/<repo-name>
-```
-
-The `<repo-name>` MUST be used as the Sentry project name to scope all Sentry MCP searches and queries.
-
-If the code is not present at this location, use the `model-w-code-checkout` skill first
-to get the latest code from `origin/develop` after confirming with the user.
-
-## Required MCP Servers
-
-This skill requires:
-
-- **Sentry MCP**: For fetching issue details, error context, user impact, and event data
-- **Chrome MCP** (optional): For reproducing the issue in a browser if applicable
-
-If Sentry MCP is not available, stop and tell the user that Sentry integration is required
-for bug assessment.
-
-If Chrome MCP is not available but the bug appears to be UI-related, note this in the
-assessment and recommend manual reproduction.
-
-## Assessment Process
-
-Perform the following steps in sequence:
-
-#### Step 1: Identify the Target Repository
-
-1. **Scan for repositories**: Check the `code/` directory to identify the active repository name. Use this command:
-   ```bash
-   find code -mindepth 2 -maxdepth 2 -type d -name .git 2>/dev/null
-   ```
-2. **Determine `<repo-name>`**:
-   - If exactly one repository is found (e.g., `code/my-repo/.git`), the `<repo-name>` is `my-repo`.
-   - If multiple repositories are found, ask the user to specify which one to assess.
-   - If no repository is found or the `code/` directory is empty, ask the user for the repository name.
-3. **Mandatory Project Slug**: This `<repo-name>` MUST be used as the `projectSlug` for ALL Sentry MCP calls.
-
-#### Step 2: Identify the Environment
-1. **Determine the Environment**:
-   - If the environment (`production` or `development`) is provided, use it.
-   - If not provided BUT a Sentry issue URL or ID is provided, fetch the environment from Sentry in Step 3.
-   - If not provided AND no Sentry issue is provided, ask the user to specify where the issue is happening.
-2. **Filter by Environment**: Use this environment to filter Sentry events and issues in subsequent MCP calls.
-
-**CRITICAL: DO NOT HALLUCINATE PROJECT NAMES.** Even if a Sentry issue ID (like `OTHER-PROJ-123`) or URL suggests a different project, you MUST use the `<repo-name>` identified in Step 1. If there is a mismatch, stop and ask the user for clarification.
-
-#### Step 3: Fetch Bug Details from Sentry
-
-**Strict Tool Restriction:**
-1. **Scope ALL calls**: Every Sentry tool call (e.g., `sentry_get_sentry_resource`, `sentry_list_events`, etc.) MUST include `projectSlug=<repo-name>` where `<repo-name>` is the one found in Step 1.
-2. **Environment Filtering**: When listing events or searching for issues, always apply the environment filter identified in Step 2.
-3. **No broad searches**: Never call `sentry_find_projects` with only an `organizationSlug`.
-4. **Mismatched IDs**: If a user-provided Sentry Issue ID (e.g. `PROJ-123`) has a prefix that does not match your `<repo-name>`, do NOT change the `projectSlug`. Report the discrepancy to the user.
-
-#### If a Sentry issue URL or ID is provided:
-- Use Sentry MCP to fetch issue details. You MUST scope the tool call to the identified project by passing `projectSlug=<repo-name>`.
-- Fetch the following details:
-   - Error message and stack trace
-   - First seen / last seen timestamps
-   - Event count and frequency trends
-   - Affected user count (if available)
-   - Tags (environment, release, browser, device, etc.)
-   - Breadcrumbs and context
-   - Related events
-- Confirm that the Sentry issue belongs to the identified repository/project.
-
-#### If a Sentry issue is not provided:
-- Proceed with the user-provided bug description, error message, or stack trace.
-- Attempt to find the relevant Sentry issue by searching with the provided error message or description, scoped to the identified project (`projectSlug=<repo-name>`) and environment.
-- If no matching Sentry issue is found, continue the assessment based on the available information (manual code analysis, business impact based on description, etc.).
-- Avoid listing all projects in the organization.
-
-### 2. Locate the Code
-
-The analysis requires the codebase to be present at `<current working directory>/code/<repo-name>`.
-
-If the code is not present:
-1. Ask the user if they want to check out the code using `model-w-code-checkout`.
-2. Do not proceed with code-dependent analysis (git blame, reading files, stack trace mapping) until the code is available.
-3. You can still perform business impact and user scope analysis using Sentry data while waiting for the code.
-
-### 3. Analyze the Stack Trace
-
-If a stack trace is available and the code is available:
-
-1. Identify the error origin (file and line number).
-2. Read the relevant code files to understand the context.
-3. Use git blame to identify:
-   - When the problematic code was introduced
-   - Who authored the change
-   - The commit message and associated pull request (if available)
-
-4. Determine if the error is in:
-   - Application code (our responsibility)
-   - Third-party library or integration (external dependency)
-   - Infrastructure or environment configuration
-
-### 4. Assess Business Impact
-
-Answer the following questions:
-
-- **What user action or workflow is affected?**
-- **Does this block a critical flow?** (e.g., checkout, authentication, data submission)
-- **Does this cause data loss or corruption?**
-- **Does this affect user trust or security?**
-- **Is this a visible error or silent failure?**
-
-Use the codebase, Sentry context, and error details to inform this analysis.
-
-### 5. Assess User Scope
-
-Determine how many users are affected:
-
-- **All users**: The error occurs for everyone under certain conditions
-- **Specific segment**: Affects users with certain roles, permissions, devices, or configurations
-- **Individual users**: Only one or very few users affected
-- **Unknown**: Insufficient data to determine scope
-
-Use Sentry's "affected users" count, tags (browser, device, environment), and event
-distribution to inform this analysis.
-
-### 6. Determine Criticality
-
-Based on business impact and user scope, assign a criticality level:
-
-- **Critical**: Blocks core functionality for all or most users, causes data loss, or affects security
-- **High**: Significantly degrades user experience for a large segment or blocks important workflows
-- **Medium**: Noticeable issue affecting some users or non-critical workflows
-- **Low**: Minor issue with limited impact or edge case
-
-### 7. Identify Root Cause (if possible)
-
-If the stack trace and code analysis allow:
-
-- Identify the immediate cause of the error (e.g., null reference, failed API call, validation error)
-- Determine if this is a regression or a longstanding issue using git blame and Sentry first-seen date
-- Identify the contributing factors (e.g., missing error handling, incorrect assumption, race condition)
-
-If the root cause cannot be determined from static analysis alone, note this and recommend
-further investigation.
-
-### 8. Determine Ownership
-
-Classify the bug:
-
-- **Our code**: The issue originates in code we control
-- **Third-party integration**: The issue is caused by an external service, library, or API
-- **Configuration or environment**: The issue is due to deployment, infrastructure, or environment settings
-- **Unclear**: Needs further investigation to determine ownership
-
-### 9. Analyze Test Coverage Gaps
-
-Review the existing test suite (unit tests and BDD tests) to determine:
-
-- **Why didn't unit tests catch this?**
-  - No unit test exists for the affected code path
-  - Unit test exists but does not cover this edge case
-  - Unit test exists but has incorrect assertions or mocks
-
-- **Why didn't BDD tests catch this?**
-  - No BDD scenario exists for the affected user workflow
-  - BDD scenario exists but does not cover this failure mode
-  - BDD scenario exists but is incomplete or skipped
-
-Search the codebase for test files related to the affected code or feature.
-
-### 10. Recommend BDD Test for Regression Prevention
-
-Suggest a specific BDD test scenario (in Gherkin format) that would have caught this bug
-and will prevent regressions once the bug is fixed.
-
-The scenario should:
-- Cover the affected user workflow
-- Include the specific conditions that trigger the bug
-- Assert the expected correct behavior
-
-Example:
-```gherkin
-Scenario: User submits form with missing required field
-  Given I am logged in as a standard user
-  When I navigate to the profile settings page
-  And I clear the "email" field
-  And I submit the form
-  Then I should see an error message "Email is required"
-  And the form should not be submitted
+```text
+Sentry MCP integration is required for bug assessment. Please enable the Sentry MCP server and try again.
 ```
 
-### 11. Reproduce the Issue (if applicable)
+Chrome MCP is optional. Use it only for UI-related reproduction when available.
+
+## Workflow
+
+### 1. Identify Repository
+
+Run:
+
+```bash
+find code -mindepth 2 -maxdepth 2 -type d -name .git 2>/dev/null
+```
+
+Resolve the repository as follows:
+
+- Exactly one repository found: use its folder name as `<repo-name>`.
+- Multiple repositories found: ask the user which repository to assess.
+- No repository found: ask for the repository name.
+
+Use `<repo-name>` with optional api/front extensions as the Sentry `projectSlug`.
+
+Do not use a project inferred from a Sentry URL, issue ID, organization, or prefix.
+
+### 2. Identify Environment
+
+Resolve environment in this order:
+
+1. User-provided environment
+2. Environment from Sentry issue or event
+3. Ask the user whether the issue occurs in `production`, `staging`, or `development`
+
+Use the resolved environment to filter Sentry issue and event searches.
+
+### 3. Fetch Sentry Context
+
+All Sentry calls must be scoped with:
+
+- `projectSlug=<repo-name>`
+- The resolved environment
+
+Do not perform broad organization-wide project searches.
+
+If a Sentry issue URL or ID is provided, fetch:
+
+- Error message
+- Stack trace
+- First seen and last seen
+- Event count and frequency
+- Affected user count
+- Tags: environment, release, browser, device, etc.
+- Breadcrumbs and context
+- Related events, if useful
+
+If no Sentry issue is provided:
+
+- Search Sentry using the supplied error message, stack trace, or bug description.
+- Keep the search scoped to the inferred project and environment.
+- If no match is found, continue using the supplied information.
+
+If a user-provided Sentry issue prefix conflicts with `<repo-name>`, do not change `projectSlug`. Report the discrepancy and ask for clarification.
+
+### 4. Locate and Analyze Code
+
+Use code from:
+
+```text
+./code/<repo-name>
+```
+
+If code is unavailable, say:
+
+```text
+The code for [repo-name] is not available at ./code/[repo-name]. I can assess business impact from the available bug/Sentry data, but code-level root cause analysis requires the repository.
+```
+
+When code is available:
+
+- Map stack trace frames to source files.
+- Identify the likely error origin.
+- Read relevant code.
+- Use git blame when helpful to identify:
+  - Commit
+  - Author
+  - Date
+  - Change context
+- Classify whether the issue comes from:
+  - Application code
+  - Third-party integration
+  - Infrastructure/configuration
+  - Unknown source
+
+### 5. Assess Business Impact
+
+Evaluate:
+
+- Affected user workflow
+- Whether the issue blocks a critical flow
+- Whether data loss or corruption is possible
+- Whether trust, security, payments, authentication, or submissions are affected
+- Whether the failure is visible, silent, intermittent, or recoverable
+
+### 6. Assess User Scope
+
+Classify scope as:
+
+- `All users`
+- `Specific segment`
+- `Individual users`
+- `Unknown`
+
+Use Sentry affected users, tags, devices, browsers, releases, environments, and event distribution when available.
+
+### 7. Determine Criticality
+
+Assign one level:
+
+- **Critical**: Blocks core functionality for all or most users, causes data loss, or creates security risk.
+- **High**: Blocks an important workflow or significantly affects a large segment.
+- **Medium**: Affects some users or a non-critical workflow.
+- **Low**: Minor issue, edge case, or limited impact.
+
+Base the rating on business impact and user scope.
+
+### 8. Identify Root Cause
+
+When evidence allows, identify:
+
+- Immediate cause
+- Error origin
+- Regression status
+- Contributing factors
+- Whether the issue was introduced recently
+
+If evidence is insufficient, say so clearly and recommend the next investigation step.
+
+### 9. Determine Ownership
+
+Classify ownership as:
+
+- `Our code`
+- `Third-party integration`
+- `Configuration/environment`
+- `Unclear`
+
+Explain briefly.
+
+### 10. Analyze Test Coverage Gaps
+
+Review relevant unit, integration, and BDD tests.
+
+Explain:
+
+- Why unit tests did not catch the issue.
+- Why BDD or end-to-end tests did not catch the issue.
+- Which test path should be added or improved.
+
+### 11. Recommend BDD Regression Test
+
+Provide one concrete Gherkin scenario that would catch this bug after it is fixed.
+
+The scenario must:
+
+- Cover the affected workflow.
+- Include the triggering condition.
+- Assert the expected correct behavior.
+
+### 12. Reproduce When Applicable
 
 If the bug is UI-related and Chrome MCP is available:
 
-1. Use Chrome MCP to navigate to the affected URL.
-2. Follow the steps to reproduce from the Sentry breadcrumbs or user report.
-3. Observe whether the error occurs.
-4. Capture screenshots or console errors if helpful.
+- Navigate to the affected URL.
+- Follow available reproduction steps.
+- Capture observed behavior.
+- Note console errors or screenshots if useful.
 
-If reproduction is successful, include this in the assessment.
-
-If Chrome MCP is not available or the bug is backend-only, skip this step and note it in
-the assessment.
+If Chrome MCP is unavailable, note that manual reproduction is recommended.
 
 ## Output Format
 
-Respond using this structure:
-
----
-
+```markdown
 # Bug Assessment: [Brief Bug Title]
 
-**Sentry Issue**: [Link or ID, if applicable]
-**Repository**: [Repository name]
-**Environment**: [Environment name]
-**Analyzed at**: [Current timestamp]
-
----
+**Sentry Issue**: [Link or ID, if available]
+**Repository**: [repo-name]
+**Environment**: [production | staging | development]
+**Analyzed at**: [current timestamp]
 
 ## Summary
 
-[1-2 sentence description of the bug and its impact]
-
----
+[1-2 sentence summary of the bug and impact.]
 
 ## Criticality: [Critical | High | Medium | Low]
 
-**Rationale**: [Brief explanation of why this criticality level was assigned based on business impact and user scope]
-
----
+**Rationale**: [Brief explanation based on impact and scope.]
 
 ## Business Impact
 
-- **Affected workflow**: [Description of the user action or feature affected]
-- **Impact type**: [e.g., Blocks core functionality, degrades UX, causes confusion, etc.]
-- **Data risk**: [Yes/No - Does this cause data loss or corruption?]
-- **Visibility**: [Visible error message, silent failure, intermittent, etc.]
-
----
+- **Affected workflow**: [...]
+- **Impact type**: [...]
+- **Data risk**: [Yes | No | Unknown]
+- **Visibility**: [...]
 
 ## User Scope
 
 - **Affected users**: [All users | Specific segment | Individual users | Unknown]
-- **Segment details**: [If specific segment, describe: device type, role, browser, environment, etc.]
-- **Event count**: [From Sentry, if available]
-- **First seen**: [Date/time from Sentry or git blame]
-- **Last seen**: [Date/time from Sentry]
-
----
+- **Segment details**: [...]
+- **Event count**: [...]
+- **First seen**: [...]
+- **Last seen**: [...]
 
 ## Root Cause Analysis
 
-**Error origin**: [File path and line number, if available]
-
-**Immediate cause**: [Description of what went wrong, e.g., "Null reference exception when user object is undefined"]
-
-**Introduced in**: [Commit hash, date, author from git blame]
-
-**Regression?**: [Yes/No - Was this working before?]
-
-**Contributing factors**: [List of conditions or assumptions that led to the bug]
-
----
+- **Error origin**: [...]
+- **Immediate cause**: [...]
+- **Introduced in**: [...]
+- **Regression?**: [Yes | No | Unknown]
+- **Contributing factors**: [...]
 
 ## Ownership
 
 - **Classification**: [Our code | Third-party integration | Configuration/environment | Unclear]
-- **Details**: [Brief explanation]
-
----
+- **Details**: [...]
 
 ## Test Coverage Gaps
 
-### Why didn't unit tests catch this?
+### Unit Tests
 
-- [Explanation, e.g., "No unit test exists for the `validateUserInput` function"]
+[...]
 
-### Why didn't BDD tests catch this?
+### BDD / End-to-End Tests
 
-- [Explanation, e.g., "No BDD scenario covers form submission with missing required fields"]
-
----
+[...]
 
 ## Recommended BDD Test
 
-To prevent regression once this bug is fixed, add the following BDD scenario:
-
 ```gherkin
-[Gherkin scenario here]
+Scenario: [Scenario name]
+  Given [...]
+  When [...]
+  Then [...]
 ```
-
----
 
 ## Reproduction
 
-[If browser reproduction was attempted, include steps and outcome. Otherwise, note "Manual reproduction recommended" or "Backend-only issue, no browser reproduction needed"]
-
----
+[...]
 
 ## Next Steps
 
-1. [Suggested immediate action, e.g., "Assign to backend team for investigation"]
-2. [Suggested follow-up, e.g., "Add recommended BDD test before deploying fix"]
-3. [Any other recommendations]
+1. [...]
+2. [...]
+3. [...]
+```
 
----
+## Constraints
 
-## Tone and Constraints
-
-- Be objective and fact-based.
-- Do not speculate beyond what the evidence supports.
-- If information is unavailable (e.g., Sentry data, git blame), note it clearly.
-- Prioritize actionable insights over exhaustive analysis.
+- Be objective and evidence-based.
+- Do not speculate beyond available evidence.
+- Clearly label unknowns.
 - Keep the assessment concise but complete.
-- Use markdown formatting for readability.
-
-## Error Handling
-
-### Sentry MCP Not Available
-
-Stop and say:
-```
-Sentry MCP integration is required for bug assessment. Please enable the Sentry MCP
-server and try again.
-```
-
-### Code Not Available
-
-Ask:
-```
-The code for [repo-name] is not available at <current working directory>/code/<repo-name>.
-Would you like me to check out the code using model-w-code-checkout first?
-```
-
-### Cannot Determine Repository
-
-Ask:
-```
-I could not determine which repository this bug belongs to. Please provide the repository
-name (e.g., "WithAgency/CAMC3").
-```
-
-### Insufficient Information
-
-If the bug description, Sentry data, and stack trace are all insufficient to perform a
-meaningful assessment, say:
-```
-I need more information to assess this bug. Please provide at least one of the following:
-- A Sentry issue URL or ID
-- A detailed bug description with steps to reproduce
-- An error message or stack trace
-```
+- Prioritize actionable triage information.
+- Do not implement fixes.
+- Do not create Linear tickets unless explicitly requested.
