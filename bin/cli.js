@@ -116,7 +116,7 @@ class FigmaMCP extends MCPServer {
 
     async generateConfig() {
         console.log(
-            `  ${colors.cyan}Registering OAuth client with Figma...${colors.reset}`
+            `  ${colors.cyan}Registering OAuth client with Figma...${colors.reset}`,
         );
         const credentials = await this._registerClient();
         return {
@@ -171,15 +171,15 @@ class FigmaMCP extends MCPServer {
                         } catch (e) {
                             reject(
                                 new Error(
-                                    `Failed to parse Figma response: ${e.message}`
-                                )
+                                    `Failed to parse Figma response: ${e.message}`,
+                                ),
                             );
                         }
                     } else {
                         reject(
                             new Error(
-                                `Figma registration failed with status ${res.statusCode}: ${body}`
-                            )
+                                `Figma registration failed with status ${res.statusCode}: ${body}`,
+                            ),
                         );
                     }
                 });
@@ -241,6 +241,7 @@ class ChromeDevtoolsMCP extends MCPServer {
             type: "local",
             command: [
                 runner,
+                "y",
                 "chrome-devtools-mcp@latest",
                 "--no-usage-statistics",
             ],
@@ -279,33 +280,19 @@ class NotionMCP extends MCPServer {
     }
 
     get requiresAuth() {
-        return false;
+        return true;
     }
 
     async generateConfig() {
-        const token = await prompt(
-            "Notion integration token (create one at https://www.notion.so/my-integrations)"
-        );
-
-        if (!token) {
-            console.log(
-                `  ${colors.yellow}⚠ No Notion token provided. You will need to set NOTION_TOKEN as an environment variable.${colors.reset}`
-            );
-        }
-
-        const runner = this._detectRunner();
         return {
-            type: "local",
-            command: [runner, "-y", "@notionhq/notion-mcp-server"],
-            env: {
-                NOTION_TOKEN: token,
-            },
+            type: "remote",
+            url: "https://mcp.notion.com/mcp",
             enabled: true,
         };
     }
 
     async authenticate() {
-        // No OAuth needed for local stdio server with token
+        return runOpenCodeAuth("notion");
     }
 
     /**
@@ -323,85 +310,6 @@ class NotionMCP extends MCPServer {
     }
 }
 
-/**
- * Google Drive MCP server (remote, OAuth).
- */
-class GoogleDriveMCP extends MCPServer {
-    get name() {
-        return "google-drive";
-    }
-
-    get requiresAuth() {
-        return true;
-    }
-
-    async generateConfig() {
-        const clientId = await prompt(
-            "Google Cloud OAuth Client ID (create one at https://console.cloud.google.com/auth/clients)"
-        );
-        const clientSecret = await prompt("Google Cloud OAuth Client Secret");
-
-        if (!clientId || !clientSecret) {
-            console.log(
-                `  ${colors.yellow}⚠ Google Drive MCP requires OAuth credentials. You will need to provide them for authentication to work.${colors.reset}`
-            );
-        }
-
-        return {
-            type: "remote",
-            url: "https://drive-mcp.googleapis.com/mcp",
-            enabled: true,
-            oauth: {
-                clientId: clientId,
-                clientSecret: clientSecret,
-            },
-        };
-    }
-
-    async authenticate() {
-        return runOpenCodeAuth("google-drive");
-    }
-}
-
-/**
- * Gmail MCP server (remote, OAuth).
- */
-class GmailMCP extends MCPServer {
-    get name() {
-        return "gmail";
-    }
-
-    get requiresAuth() {
-        return true;
-    }
-
-    async generateConfig() {
-        const clientId = await prompt(
-            "Google Cloud OAuth Client ID (create one at https://console.cloud.google.com/auth/clients)"
-        );
-        const clientSecret = await prompt("Google Cloud OAuth Client Secret");
-
-        if (!clientId || !clientSecret) {
-            console.log(
-                `  ${colors.yellow}⚠ Gmail MCP requires OAuth credentials. You will need to provide them for authentication to work.${colors.reset}`
-            );
-        }
-
-        return {
-            type: "remote",
-            url: "https://gmail-mcp.googleapis.com/mcp",
-            enabled: true,
-            oauth: {
-                clientId: clientId,
-                clientSecret: clientSecret,
-            },
-        };
-    }
-
-    async authenticate() {
-        return runOpenCodeAuth("gmail");
-    }
-}
 
 /**
  * Sentry MCP server.
@@ -445,12 +353,12 @@ class SentryMCP extends MCPServer {
         // Self-hosted: stdio transport with access token
         const hostname = this._extractHostname(host);
         const accessToken = await prompt(
-            "Sentry access token (create one at https://sentry.wadrid.net/settings/account/api/auth-tokens/new-token/ using Read-only permissions)"
+            "Sentry access token (create one at https://sentry.wadrid.net/settings/account/api/auth-tokens/new-token/ using Read-only permissions)",
         );
 
         if (!accessToken) {
             console.log(
-                `  ${colors.yellow}⚠ No access token provided. You will need to set SENTRY_ACCESS_TOKEN as an environment variable.${colors.reset}`
+                `  ${colors.yellow}⚠ No access token provided. You will need to set SENTRY_ACCESS_TOKEN as an environment variable.${colors.reset}`,
             );
         }
 
@@ -527,10 +435,10 @@ class SentryMCP extends MCPServer {
 function runOpenCodeAuth(name) {
     return new Promise((resolve, reject) => {
         console.log(
-            `  ${colors.cyan}Running: opencode mcp auth ${name}${colors.reset}`
+            `  ${colors.cyan}Running: opencode mcp auth ${name}${colors.reset}`,
         );
         console.log(
-            `  ${colors.yellow}A browser window will open for you to authorize.${colors.reset}\n`
+            `  ${colors.yellow}A browser window will open for you to authorize.${colors.reset}\n`,
         );
 
         const auth = spawn("opencode", ["mcp", "auth", name], {
@@ -544,8 +452,8 @@ function runOpenCodeAuth(name) {
             } else {
                 reject(
                     new Error(
-                        `opencode mcp auth ${name} exited with code ${code}`
-                    )
+                        `opencode mcp auth ${name} exited with code ${code}`,
+                    ),
                 );
             }
         });
@@ -553,8 +461,8 @@ function runOpenCodeAuth(name) {
         auth.on("error", (err) => {
             reject(
                 new Error(
-                    `Could not run 'opencode mcp auth ${name}': ${err.message}`
-                )
+                    `Could not run 'opencode mcp auth ${name}': ${err.message}`,
+                ),
             );
         });
     });
@@ -585,7 +493,7 @@ const MCP_SERVERS = [
  */
 function copySkills(configDir) {
     console.log(
-        `\n${colors.blue}Copying PM skills to OpenCode...${colors.reset}`
+        `\n${colors.blue}Copying PM skills to OpenCode...${colors.reset}`,
     );
     const skillsDestBase = path.join(configDir, "skills");
     if (!fs.existsSync(skillsDestBase)) {
@@ -597,7 +505,7 @@ function copySkills(configDir) {
         __dirname,
         "..",
         ".config",
-        "opencode-pm.json"
+        "opencode-pm.json",
     );
     if (!fs.existsSync(templatePath)) {
         return;
@@ -606,7 +514,7 @@ function copySkills(configDir) {
     const pmTemplate = JSON.parse(fs.readFileSync(templatePath, "utf-8"));
     const skillPermissions = pmTemplate.agent["pm-planner"].permission.skill;
     const allowedSkills = Object.keys(skillPermissions).filter(
-        (skill) => skillPermissions[skill] === "allow" && skill !== "*"
+        (skill) => skillPermissions[skill] === "allow" && skill !== "*",
     );
 
     const skillsSrcBase = path.join(__dirname, "..", "skills");
@@ -619,7 +527,7 @@ function copySkills(configDir) {
 
         if (!fs.existsSync(srcSkillPath)) {
             console.log(
-                `  ${colors.yellow}⚠ Skill not found: ${skillName}${colors.reset}`
+                `  ${colors.yellow}⚠ Skill not found: ${skillName}${colors.reset}`,
             );
             skippedCount++;
             continue;
@@ -640,18 +548,18 @@ function copySkills(configDir) {
             copiedCount++;
         } else {
             console.log(
-                `  ${colors.yellow}⚠ SKILL.md not found in ${skillName}${colors.reset}`
+                `  ${colors.yellow}⚠ SKILL.md not found in ${skillName}${colors.reset}`,
             );
             skippedCount++;
         }
     }
 
     console.log(
-        `\n${colors.green}✔ Copied ${copiedCount} skill(s) to ${skillsDestBase}${colors.reset}`
+        `\n${colors.green}✔ Copied ${copiedCount} skill(s) to ${skillsDestBase}${colors.reset}`,
     );
     if (skippedCount > 0) {
         console.log(
-            `${colors.yellow}  ${skippedCount} skill(s) skipped (not found)${colors.reset}`
+            `${colors.yellow}  ${skippedCount} skill(s) skipped (not found)${colors.reset}`,
         );
     }
 }
@@ -723,19 +631,19 @@ if (command === "install") {
 
         if (!fs.existsSync(srcFile)) {
             console.error(
-                `${colors.red}Error: Source file not found at ${srcFile}${colors.reset}`
+                `${colors.red}Error: Source file not found at ${srcFile}${colors.reset}`,
             );
             process.exit(1);
         }
 
         fs.copyFileSync(srcFile, destFile);
         console.log(
-            `${colors.green}✔ Successfully installed Agent W skill to ${destFile}${colors.reset}`
+            `${colors.green}✔ Successfully installed Agent W skill to ${destFile}${colors.reset}`,
         );
     } catch (error) {
         console.error(
             `${colors.red}Error during installation:${colors.reset}`,
-            error.message
+            error.message,
         );
         process.exit(1);
     }
@@ -747,14 +655,14 @@ if (command === "install") {
             os.homedir(),
             ".config",
             "opencode",
-            "opencode.json"
+            "opencode.json",
         );
     } else if (configPath.startsWith("~/")) {
         configPath = path.join(os.homedir(), configPath.slice(2));
     }
 
     console.log(
-        `${colors.blue}Setting up MCP servers for OpenCode...${colors.reset}`
+        `${colors.blue}Setting up MCP servers for OpenCode...${colors.reset}`,
     );
     console.log(`Config path: ${colors.yellow}${configPath}${colors.reset}\n`);
 
@@ -765,11 +673,11 @@ if (command === "install") {
             if (fs.existsSync(configPath)) {
                 try {
                     configObj = JSON.parse(
-                        fs.readFileSync(configPath, "utf-8")
+                        fs.readFileSync(configPath, "utf-8"),
                     );
                 } catch (e) {
                     console.error(
-                        `${colors.red}Failed to parse config file. Overwriting with new config.${colors.reset}`
+                        `${colors.red}Failed to parse config file. Overwriting with new config.${colors.reset}`,
                     );
                 }
             }
@@ -780,7 +688,7 @@ if (command === "install") {
                 console.log(`${colors.magenta}▸ ${server.name}${colors.reset}`);
                 configObj.mcp[server.name] = await server.generateConfig();
                 console.log(
-                    `  ${colors.green}✔ Config generated${colors.reset}\n`
+                    `  ${colors.green}✔ Config generated${colors.reset}\n`,
                 );
             }
 
@@ -791,30 +699,30 @@ if (command === "install") {
             }
             fs.writeFileSync(configPath, JSON.stringify(configObj, null, 2));
             console.log(
-                `${colors.green}✔ Config written to ${configPath}${colors.reset}\n`
+                `${colors.green}✔ Config written to ${configPath}${colors.reset}\n`,
             );
 
             // Authenticate servers that require it (sequentially)
             const authServers = MCP_SERVERS.filter((s) => s.requiresAuth);
             if (authServers.length > 0) {
                 console.log(
-                    `${colors.blue}Authenticating OAuth servers...${colors.reset}\n`
+                    `${colors.blue}Authenticating OAuth servers...${colors.reset}\n`,
                 );
                 for (const server of authServers) {
                     console.log(
-                        `${colors.magenta}▸ ${server.name}${colors.reset}`
+                        `${colors.magenta}▸ ${server.name}${colors.reset}`,
                     );
                     try {
                         await server.authenticate();
                         console.log(
-                            `  ${colors.green}✔ Authenticated${colors.reset}\n`
+                            `  ${colors.green}✔ Authenticated${colors.reset}\n`,
                         );
                     } catch (err) {
                         console.error(
-                            `  ${colors.yellow}⚠ ${err.message}${colors.reset}`
+                            `  ${colors.yellow}⚠ ${err.message}${colors.reset}`,
                         );
                         console.log(
-                            `  ${colors.yellow}  Retry manually: opencode mcp auth ${server.name}${colors.reset}\n`
+                            `  ${colors.yellow}  Retry manually: opencode mcp auth ${server.name}${colors.reset}\n`,
                         );
                     }
                 }
@@ -823,7 +731,7 @@ if (command === "install") {
             console.log(`${colors.green}✔ MCP setup complete!${colors.reset}`);
         } catch (err) {
             console.error(
-                `${colors.red}Error setting up MCP: ${err.message}${colors.reset}`
+                `${colors.red}Error setting up MCP: ${err.message}${colors.reset}`,
             );
             process.exit(1);
         }
@@ -833,12 +741,12 @@ if (command === "install") {
         os.homedir(),
         ".config",
         "opencode",
-        "opencode.json"
+        "opencode.json",
     );
     const configDir = path.dirname(configPath);
 
     console.log(
-        `${colors.blue}Setting up PM agent configuration for OpenCode...${colors.reset}`
+        `${colors.blue}Setting up PM agent configuration for OpenCode...${colors.reset}`,
     );
     console.log(`Config path: ${colors.yellow}${configPath}${colors.reset}\n`);
 
@@ -846,13 +754,13 @@ if (command === "install") {
         // Check if OpenCode config directory exists
         if (!fs.existsSync(configDir)) {
             console.error(
-                `${colors.red}Error: OpenCode is not installed.${colors.reset}`
+                `${colors.red}Error: OpenCode is not installed.${colors.reset}`,
             );
             console.error(
-                `${colors.red}Directory not found: ${configDir}${colors.reset}`
+                `${colors.red}Directory not found: ${configDir}${colors.reset}`,
             );
             console.log(
-                `\n${colors.yellow}Please install OpenCode first or run 'agent-w setup-mcp' to initialize the config.${colors.reset}`
+                `\n${colors.yellow}Please install OpenCode first or run 'agent-w setup-mcp' to initialize the config.${colors.reset}`,
             );
             process.exit(1);
         }
@@ -871,11 +779,11 @@ if (command === "install") {
                 const backupPath = `${configPath}.${timestamp}.bak`;
                 fs.copyFileSync(configPath, backupPath);
                 console.log(
-                    `${colors.cyan}✔ Backup created: ${backupPath}${colors.reset}\n`
+                    `${colors.cyan}✔ Backup created: ${backupPath}${colors.reset}\n`,
                 );
             } catch (e) {
                 console.error(
-                    `${colors.yellow}⚠ Failed to parse existing config. Creating new config.${colors.reset}\n`
+                    `${colors.yellow}⚠ Failed to parse existing config. Creating new config.${colors.reset}\n`,
                 );
                 configObj = {};
             }
@@ -886,11 +794,11 @@ if (command === "install") {
             __dirname,
             "..",
             ".config",
-            "opencode-pm.json"
+            "opencode-pm.json",
         );
         if (!fs.existsSync(templatePath)) {
             console.error(
-                `${colors.red}Error: PM template not found at ${templatePath}${colors.reset}`
+                `${colors.red}Error: PM template not found at ${templatePath}${colors.reset}`,
             );
             process.exit(1);
         }
@@ -907,10 +815,10 @@ if (command === "install") {
         // Write updated config
         fs.writeFileSync(configPath, JSON.stringify(configObj, null, 2));
         console.log(
-            `${colors.green}✔ PM agent configuration updated successfully!${colors.reset}`
+            `${colors.green}✔ PM agent configuration updated successfully!${colors.reset}`,
         );
         console.log(
-            `${colors.green}  Default agent set to: pm-planner${colors.reset}`
+            `${colors.green}  Default agent set to: pm-planner${colors.reset}`,
         );
 
         // Copy allowed skills to ~/.config/opencode/skills/
@@ -918,7 +826,7 @@ if (command === "install") {
     } catch (error) {
         console.error(
             `${colors.red}Error setting up PM configuration:${colors.reset}`,
-            error.message
+            error.message,
         );
         process.exit(1);
     }
@@ -944,7 +852,7 @@ if (command === "install") {
     } catch (error) {
         console.error(
             `${colors.red}Error during update:${colors.reset}`,
-            error.message
+            error.message,
         );
         process.exit(1);
     }
