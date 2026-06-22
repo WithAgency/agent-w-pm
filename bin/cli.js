@@ -478,8 +478,6 @@ const MCP_SERVERS = [
     new LinearMCP(),
     new ChromeDevtoolsMCP(),
     new NotionMCP(),
-    new GoogleDriveMCP(),
-    new GmailMCP(),
     new SentryMCP(),
 ];
 
@@ -499,6 +497,7 @@ function copySkills(configDir) {
     if (!fs.existsSync(skillsDestBase)) {
         fs.mkdirSync(skillsDestBase, { recursive: true });
     } else {
+        console.log("deleting")
         // Delete any existing skills starting with "model-w-"
         const existingSkills = fs.readdirSync(skillsDestBase);
         for (const skill of existingSkills) {
