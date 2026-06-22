@@ -498,6 +498,15 @@ function copySkills(configDir) {
     const skillsDestBase = path.join(configDir, "skills");
     if (!fs.existsSync(skillsDestBase)) {
         fs.mkdirSync(skillsDestBase, { recursive: true });
+    } else {
+        // Delete any existing skills starting with "model-w-"
+        const existingSkills = fs.readdirSync(skillsDestBase);
+        for (const skill of existingSkills) {
+            if (skill.startsWith("model-w-")) {
+                const skillPath = path.join(skillsDestBase, skill);
+                fs.rmSync(skillPath, { recursive: true, force: true });
+            }
+        }
     }
 
     // Load PM template to get allowed skills

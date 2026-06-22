@@ -1,5 +1,5 @@
 ---
-name: model-w-linear-ticket-review
+name: agent-w-pm-linear-ticket-review
 description:
     Use this skill when the user asks to review, assess, analyze, or evaluate a Linear
     ticket, issue, or specification. Reviews Linear tickets for gaps, ambiguity, missing

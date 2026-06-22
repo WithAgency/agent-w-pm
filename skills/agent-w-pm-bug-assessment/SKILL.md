@@ -1,5 +1,5 @@
 ---
-name: model-w-bug-assessment
+name: agent-w-pm-bug-assessment
 description:
     Use this skill when the user asks to assess, analyze, triage, qualify, or investigate
     a bug, error, issue, or Sentry event. Provides business impact analysis, criticality

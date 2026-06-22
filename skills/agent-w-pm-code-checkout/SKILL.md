@@ -1,5 +1,5 @@
 ---
-name: model-w-code-checkout
+name:  agent-w-pm-code-checkout
 description:
     Use this skill when the user asks to fetch, get, clone, pull, sync, update, refresh
     or checkout code/repository. This skills allows to have the local code checkout that
