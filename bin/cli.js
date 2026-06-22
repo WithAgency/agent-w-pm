@@ -268,6 +268,142 @@ class ChromeDevtoolsMCP extends MCPServer {
 }
 
 /**
+ * Notion MCP server.
+ *
+ * Runs as a local process via npx @notionhq/notion-mcp-server.
+ * Requires a Notion internal integration token.
+ */
+class NotionMCP extends MCPServer {
+    get name() {
+        return "notion";
+    }
+
+    get requiresAuth() {
+        return false;
+    }
+
+    async generateConfig() {
+        const token = await prompt(
+            "Notion integration token (create one at https://www.notion.so/my-integrations)"
+        );
+
+        if (!token) {
+            console.log(
+                `  ${colors.yellow}⚠ No Notion token provided. You will need to set NOTION_TOKEN as an environment variable.${colors.reset}`
+            );
+        }
+
+        const runner = this._detectRunner();
+        return {
+            type: "local",
+            command: [runner, "-y", "@notionhq/notion-mcp-server"],
+            env: {
+                NOTION_TOKEN: token,
+            },
+            enabled: true,
+        };
+    }
+
+    async authenticate() {
+        // No OAuth needed for local stdio server with token
+    }
+
+    /**
+     * Detect whether pnpx is available, falling back to npx.
+     * @returns {string} "pnpx" or "npx"
+     * @private
+     */
+    _detectRunner() {
+        try {
+            execSync("which pnpx", { stdio: "ignore" });
+            return "pnpx";
+        } catch {
+            return "npx";
+        }
+    }
+}
+
+/**
+ * Google Drive MCP server (remote, OAuth).
+ */
+class GoogleDriveMCP extends MCPServer {
+    get name() {
+        return "google-drive";
+    }
+
+    get requiresAuth() {
+        return true;
+    }
+
+    async generateConfig() {
+        const clientId = await prompt(
+            "Google Cloud OAuth Client ID (create one at https://console.cloud.google.com/auth/clients)"
+        );
+        const clientSecret = await prompt("Google Cloud OAuth Client Secret");
+
+        if (!clientId || !clientSecret) {
+            console.log(
+                `  ${colors.yellow}⚠ Google Drive MCP requires OAuth credentials. You will need to provide them for authentication to work.${colors.reset}`
+            );
+        }
+
+        return {
+            type: "remote",
+            url: "https://drive-mcp.googleapis.com/mcp",
+            enabled: true,
+            oauth: {
+                clientId: clientId,
+                clientSecret: clientSecret,
+            },
+        };
+    }
+
+    async authenticate() {
+        return runOpenCodeAuth("google-drive");
+    }
+}
+
+/**
+ * Gmail MCP server (remote, OAuth).
+ */
+class GmailMCP extends MCPServer {
+    get name() {
+        return "gmail";
+    }
+
+    get requiresAuth() {
+        return true;
+    }
+
+    async generateConfig() {
+        const clientId = await prompt(
+            "Google Cloud OAuth Client ID (create one at https://console.cloud.google.com/auth/clients)"
+        );
+        const clientSecret = await prompt("Google Cloud OAuth Client Secret");
+
+        if (!clientId || !clientSecret) {
+            console.log(
+                `  ${colors.yellow}⚠ Gmail MCP requires OAuth credentials. You will need to provide them for authentication to work.${colors.reset}`
+            );
+        }
+
+        return {
+            type: "remote",
+            url: "https://gmail-mcp.googleapis.com/mcp",
+            enabled: true,
+            oauth: {
+                clientId: clientId,
+                clientSecret: clientSecret,
+            },
+        };
+    }
+
+    async authenticate() {
+        return runOpenCodeAuth("gmail");
+    }
+}
+
+/**
  * Sentry MCP server.
  *
  * Supports two modes depending on the Sentry instance:
@@ -433,6 +569,9 @@ const MCP_SERVERS = [
     new FigmaMCP(),
     new LinearMCP(),
     new ChromeDevtoolsMCP(),
+    new NotionMCP(),
+    new GoogleDriveMCP(),
+    new GmailMCP(),
     new SentryMCP(),
 ];
 
