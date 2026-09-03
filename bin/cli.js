@@ -223,8 +223,9 @@ class LinearMCP extends MCPServer {
 /**
  * Chrome DevTools MCP server (local stdio, no auth).
  *
- * Runs as a local process via pnpx (preferred) or npx as fallback.
- * No authentication is required.
+ * Runs as a local process via npx, using a dedicated persistent profile for
+ * the PM agent.
+ * No authentication is required for the MCP server itself.
  */
 class ChromeDevtoolsMCP extends MCPServer {
     get name() {
@@ -236,14 +237,20 @@ class ChromeDevtoolsMCP extends MCPServer {
     }
 
     async generateConfig() {
-        const runner = this._detectRunner();
         return {
             type: "local",
             command: [
-                runner,
-                "y",
-                "chrome-devtools-mcp@latest",
+                "npx",
+                "chrome-devtools-mcp@1.2.0",
                 "--no-usage-statistics",
+                "--no-update-checks",
+                "--user-data-dir",
+                path.join(
+                    os.homedir(),
+                    ".cache",
+                    "chrome-devtools-mcp",
+                    "agent-w-pm-profile",
+                ),
             ],
             enabled: true,
         };
@@ -253,19 +260,6 @@ class ChromeDevtoolsMCP extends MCPServer {
         // No authentication needed for local stdio server
     }
 
-    /**
-     * Detect whether pnpx is available, falling back to npx.
-     * @returns {string} "pnpx" or "npx"
-     * @private
-     */
-    _detectRunner() {
-        try {
-            execSync("which pnpx", { stdio: "ignore" });
-            return "pnpx";
-        } catch {
-            return "npx";
-        }
-    }
 }
 
 /**

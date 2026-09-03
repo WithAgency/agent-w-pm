@@ -140,8 +140,10 @@ This command will:
 1. **Configure the PM agent** in your OpenCode config
    (`~/.config/opencode/opencode.json`):
    - Sets `pm-planner` as the default agent
-   - Configures read-only permissions (can read but cannot write/edit/bash)
-   - Allows access to Linear, Sentry, and Figma MCP tools (read-only)
+   - Configures read-only project permissions (no write/edit/patch/task access)
+   - Allows access to Linear, Sentry, Figma, and Chrome DevTools MCP tools;
+     browser uploads, extensions, performance, memory, and network tools are
+     denied
 
 2. **Copy PM-specific skills** to `~/.config/opencode/skills/`:
    - `model-w-linear-review` - Review Linear ticket specifications

@@ -41,6 +41,11 @@
                 "notion_notion-list-data-source-templates": "allow",
                 "notion_notion-list-comments": "allow",
                 "notion_notion-get-users": "allow",
+                "chrome-devtools_upload_file": "deny",
+                "chrome-devtools_*extension*": "deny",
+                "chrome-devtools_performance_*": "deny",
+                "chrome-devtools_*heapsnapshot*": "deny",
+                "chrome-devtools_*network*": "deny",
                 "skill": {
                     "agent-w-pm-linear-review": "allow",
                     "agent-w-pm-code-checkout": "allow",
