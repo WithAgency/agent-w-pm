@@ -146,9 +146,10 @@ This command will:
      denied
 
 2. **Copy PM-specific skills** to `~/.config/opencode/skills/`:
-   - `model-w-linear-review` - Review Linear ticket specifications
-   - `model-w-code-checkout` - Clone/sync repositories for analysis
-   - `model-w-bug-assessment` - Assess bugs from Sentry for triage
+   - `agent-w-pm-linear-review` - Review Linear ticket specifications
+   - `agent-w-pm-code-checkout` - Clone/sync repositories for analysis
+   - `agent-w-pm-bug-assessment` - Assess bugs from Sentry for triage
+   - `agent-w-pm-load-skills` - Discover and load project-specific skills on-demand from `./skills/`
    - `model-w-docs-generate` - Generate project documentation
 
 The PM agent is designed to be **safe and read-only** — it cannot create
@@ -161,6 +162,8 @@ users who need to work with development artifacts.
 - "Get the code for WithAgency/CAMC3 and analyze the authentication flow"
 - "Assess this Sentry bug: https://sentry.io/issues/12345/"
 - "What's the business impact of the recent cart abandonment errors?"
+- "List available project skills"
+- "Load project skills from ./skills"
 - "Generate documentation for this project"
 
 ## For Contributors
