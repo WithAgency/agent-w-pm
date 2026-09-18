@@ -304,6 +304,127 @@ class NotionMCP extends MCPServer {
 }
 
 /**
+ * Shared Google Cloud OAuth client credentials, prompted for once and reused
+ * across any Google-backed MCP servers (Gmail, Drive) configured in the same
+ * setup-mcp run, so the user isn't asked for the same Client ID/Secret twice.
+ * @type {{clientId: string, clientSecret: string} | null}
+ */
+let googleOAuthCredentials = null;
+
+/**
+ * Prompt for a Google Cloud OAuth Client ID/Secret, caching the answer so
+ * multiple Google-backed MCP servers (Gmail, Drive) only ask once per run.
+ * Nothing here is ever written into this repo - the credentials are typed
+ * in at setup time and land only in the user's local, gitignored OpenCode
+ * config (~/.config/opencode/opencode.json).
+ *
+ * The OAuth client MUST be created as a "Desktop app" type in Google Cloud
+ * Console (APIs & Services > Credentials > Create Credentials > OAuth
+ * client ID > Desktop app). A "Web application" client will fail with
+ * "redirect_uri_mismatch", because OpenCode's local OAuth callback listens
+ * on a randomly chosen port each run, and "Desktop app" is the only client
+ * type Google exempts from exact port matching on 127.0.0.1/localhost.
+ *
+ * The Google Cloud project backing that client also needs to be enrolled in
+ * the Workspace Developer Preview Program (https://developers.google.com/workspace/preview),
+ * or every tool call will fail with an enrollment error even after auth
+ * succeeds.
+ *
+ * @returns {Promise<{clientId: string, clientSecret: string}>}
+ */
+async function promptGoogleCredentials() {
+    if (googleOAuthCredentials) {
+        return googleOAuthCredentials;
+    }
+
+    const clientId = await prompt("Google Cloud OAuth Client ID");
+    const clientSecret = await prompt("Google Cloud OAuth Client Secret");
+
+    if (!clientId || !clientSecret) {
+        console.log(
+            `  ${colors.yellow}⚠ Google MCP servers require OAuth credentials. You will need to provide them for authentication to work.${colors.reset}`
+        );
+    }
+
+    googleOAuthCredentials = { clientId, clientSecret };
+    return googleOAuthCredentials;
+}
+
+/**
+ * Google Drive MCP server (remote, OAuth).
+ *
+ * Requires the Google Cloud project to be enrolled in the Google Workspace
+ * Developer Preview Program (https://developers.google.com/workspace/preview)
+ * - otherwise every tool call fails with an enrollment error even after
+ * auth succeeds.
+ */
+class GoogleDriveMCP extends MCPServer {
+    get name() {
+        return "drive";
+    }
+
+    get requiresAuth() {
+        return true;
+    }
+
+    async generateConfig() {
+        const { clientId, clientSecret } = await promptGoogleCredentials();
+
+        return {
+            type: "remote",
+            url: "https://drivemcp.googleapis.com/mcp/v1",
+            enabled: true,
+            oauth: {
+                clientId,
+                clientSecret,
+                scope: "https://www.googleapis.com/auth/drive.readonly",
+            },
+        };
+    }
+
+    async authenticate() {
+        return runOpenCodeAuth("drive");
+    }
+}
+
+/**
+ * Gmail MCP server (remote, OAuth).
+ *
+ * Requires the Google Cloud project to be enrolled in the Google Workspace
+ * Developer Preview Program (https://developers.google.com/workspace/preview)
+ * - otherwise every tool call fails with an enrollment error even after
+ * auth succeeds.
+ */
+class GmailMCP extends MCPServer {
+    get name() {
+        return "gmail";
+    }
+
+    get requiresAuth() {
+        return true;
+    }
+
+    async generateConfig() {
+        const { clientId, clientSecret } = await promptGoogleCredentials();
+
+        return {
+            type: "remote",
+            url: "https://gmailmcp.googleapis.com/mcp/v1",
+            enabled: true,
+            oauth: {
+                clientId,
+                clientSecret,
+                scope: "https://www.googleapis.com/auth/gmail.readonly",
+            },
+        };
+    }
+
+    async authenticate() {
+        return runOpenCodeAuth("gmail");
+    }
+}
+
+/**
  * Sentry MCP server.
  *
  * Supports two modes depending on the Sentry instance:
@@ -470,6 +591,8 @@ const MCP_SERVERS = [
     new LinearMCP(),
     new ChromeDevtoolsMCP(),
     new NotionMCP(),
+    new GoogleDriveMCP(),
+    new GmailMCP(),
     new SentryMCP(),
 ];
 

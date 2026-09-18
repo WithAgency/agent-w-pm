@@ -68,37 +68,32 @@
         "build": {
             "disable": false,
             "edit": {
-              "*": "deny",
-              "./skills/*": "allow"
+                "*": "deny",
+                "./skills/*": "allow"
             },
-
             "bash": {
-              "*": "ask",
-
-              "pwd": "allow",
-              "ls *": "allow",
-              "rg *": "allow",
-              "wc *": "allow",
-              "head *": "allow",
-              "tail *": "allow",
-              "file *": "allow",
-              "which *": "allow",
-              "find *": "allow",
-              "grep *": "allow",
-
-              "cat *": "allow",
-              "sed *": "allow",
-              "awk *": "allow",
-              "xargs *": "allow",
-              "python *": "allow",
-              "curl *": "allow",
-              "wget *": "allow",
-
-              "edit *": "allow",
-              "write *": "allow",
-
-              "git *": "allow",
-              "git push *": "deny"
+                "*": "ask",
+                "pwd": "allow",
+                "ls *": "allow",
+                "rg *": "allow",
+                "wc *": "allow",
+                "head *": "allow",
+                "tail *": "allow",
+                "file *": "allow",
+                "which *": "allow",
+                "find *": "allow",
+                "grep *": "allow",
+                "cat *": "allow",
+                "sed *": "allow",
+                "awk *": "allow",
+                "xargs *": "allow",
+                "python *": "allow",
+                "curl *": "allow",
+                "wget *": "allow",
+                "edit *": "allow",
+                "write *": "allow",
+                "git *": "allow",
+                "git push *": "deny"
             }
         }
     }
