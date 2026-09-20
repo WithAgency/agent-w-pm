@@ -150,6 +150,8 @@ This command will:
    - `agent-w-pm-code-checkout` - Clone/sync repositories for analysis
    - `agent-w-pm-bug-assessment` - Assess bugs from Sentry for triage
    - `agent-w-pm-load-skills` - Discover and load project-specific skills on-demand from `./skills/`
+   - `agent-w-pm-setup-project-data` - Set up or update the project data (see
+     [Project Data](#project-data))
    - `model-w-docs-generate` - Generate project documentation
 
 The PM agent is designed to be **safe and read-only** — it cannot create
@@ -165,6 +167,92 @@ users who need to work with development artifacts.
 - "List available project skills"
 - "Load project skills from ./skills"
 - "Generate documentation for this project"
+
+### Project Data
+
+Every project has its own GitHub repos, Linear team, Sentry projects, Notion
+page, Google Drive folders and Figma folder. Agent W stores them once, in a
+block inside the **project folder's `AGENTS.md`**, so every OpenCode
+conversation started there already knows them. MCP calls and skills use the
+stored values instead of searching for them, which saves time and tokens.
+
+The project folder is the folder that contains `code/` and `skills/`, for
+example `~/Desktop/_With/projects/cawl/`. Start OpenCode from that folder (not
+from a clone inside `code/`).
+
+To create or update the data, run the slash command in OpenCode:
+
+```text
+/setup-project-data
+```
+
+(or ask "set up the project data"). The PM agent finds candidates through the
+connected MCPs (Linear teams, Sentry projects, Notion, Drive, Figma, the repos
+cloned in `code/`), asks you to confirm or pick, previews the result, and only
+then writes it.
+
+The result is a block like this in `AGENTS.md` (everything outside the markers
+is left alone):
+
+````markdown
+<!-- agent-w:project-data:start (managed by `agent-w project-data`, do not edit by hand) -->
+## Project context
+…usage notes for the agent…
+
+```yaml
+schema_version: 2
+project: IB Global Data Reconciliation
+updated: 2026-09-20
+github:
+  repos:
+    - repo: niji/ib-api
+      role: backend
+linear:
+  team: CAWL
+sentry:
+  org: niji
+  projects: [ib-api, ib-web]
+notion:
+  page:
+    id: 35609273-cd88-80fe-9b9b-f057fa3fb46d
+    title: IB Global Data Reconciliation
+    url: https://app.notion.com/p/withnotion/IB-Global-Data-Reconciliation-35609273cd8880fe9b9bf057fa3fb46d
+drive:
+  folders:
+    - id: 1AbCdEfGhIjKlMnOp
+      name: Client deliverables
+figma:
+  folder:
+    id: "599655676"
+    team_id: "912673193368393001"
+    url: https://www.figma.com/files/team/912673193368393001/folder/599655676
+```
+<!-- agent-w:project-data:end -->
+````
+
+Every integration is optional, and the first GitHub repo is the default one.
+Commit `AGENTS.md` if the project folder is under version control; it holds no
+secrets.
+
+The block is managed by the `agent-w project-data` command, which the skill
+calls for you. You can also use it directly from the project folder:
+
+```bash
+agent-w project-data read                    # print the stored data as JSON
+agent-w project-data validate                # validate the block in AGENTS.md
+agent-w project-data write --file data.json  # validate, then create/update the block
+agent-w project-data write --dry-run < data.yaml
+agent-w project-data parse-url "<notion/figma/drive/github/linear url>"
+```
+
+`write` accepts JSON or YAML, validates it (IDs must be strings, Linear team
+keys uppercase, and so on), normalizes it, and only replaces the marked block.
+It refuses to touch an `AGENTS.md` that is not plain UTF-8 text (for example a
+file saved as RTF or UTF-16 by a rich text editor).
+
+> **Note:** OpenCode v2 loads `AGENTS.md` files, but the `instructions` entry
+> of `opencode.json` is currently accepted and not loaded, which is why the data
+> lives in `AGENTS.md` itself.
 
 ## For Contributors
 

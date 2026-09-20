@@ -3,10 +3,13 @@
 /**
  * Agent W CLI
  *
- * Provides two commands:
+ * Provides these commands:
  * - `install`: Copies the model-w-bootstrap skill to ~/.agents/skills/
  * - `setup-mcp`: Configures all MCP servers in the OpenCode config and
  *   triggers OAuth authentication for servers that require it.
+ * - `setup-pm`: Configures the read-only PM agent, skills and slash commands.
+ * - `project-data`: Reads, validates and writes the project metadata block
+ *   in a project folder's AGENTS.md.
  *
  * @module bin/cli
  */
@@ -18,6 +21,7 @@ import https from "https";
 import readline from "readline";
 import { spawn, execSync } from "child_process";
 import { fileURLToPath } from "url";
+import { runProjectData } from "../src/project-data.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -690,6 +694,42 @@ function copySkills(configDir) {
     }
 }
 
+/**
+ * Copy the PM slash commands (markdown files in the package's commands/
+ * folder) to the OpenCode commands directory. Only files shipped by Agent W
+ * are overwritten; other commands the user created are left alone.
+ * @param {string} configDir - The OpenCode configuration directory.
+ */
+function copyCommands(configDir) {
+    console.log(
+        `\n${colors.blue}Copying PM slash commands to OpenCode...${colors.reset}`
+    );
+    const commandsSrc = path.join(__dirname, "..", "commands");
+    if (!fs.existsSync(commandsSrc)) {
+        return;
+    }
+    const commandsDest = path.join(configDir, "commands");
+    fs.mkdirSync(commandsDest, { recursive: true });
+
+    let copiedCount = 0;
+    for (const file of fs.readdirSync(commandsSrc)) {
+        if (!file.endsWith(".md")) {
+            continue;
+        }
+        fs.copyFileSync(
+            path.join(commandsSrc, file),
+            path.join(commandsDest, file)
+        );
+        console.log(
+            `  ${colors.green}✔ /${file.replace(/\.md$/, "")}${colors.reset}`
+        );
+        copiedCount++;
+    }
+    console.log(
+        `\n${colors.green}✔ Copied ${copiedCount} command(s) to ${commandsDest}${colors.reset}`
+    );
+}
+
 /** Print CLI usage information to stdout. */
 const showHelp = () => {
     const serverNames = MCP_SERVERS.map((s) => s.name).join(", ");
@@ -708,7 +748,12 @@ Commands:
                                    Automatically triggers OAuth for servers that need it.
   setup-pm                         Setup PM agent configuration in OpenCode.
                                    Updates ${colors.yellow}~/.config/opencode/opencode.json${colors.reset}.
-                                   Copies allowed PM skills to ${colors.yellow}~/.config/opencode/skills/${colors.reset}.
+                                   Copies allowed PM skills to ${colors.yellow}~/.config/opencode/skills/${colors.reset}
+                                   and slash commands to ${colors.yellow}~/.config/opencode/commands/${colors.reset}.
+  project-data <command>           Manage the project metadata (GitHub, Linear, Sentry,
+                                   Notion, Drive, Figma) stored in ${colors.yellow}./AGENTS.md${colors.reset}.
+                                   Commands: read, validate, write, parse-url.
+                                   Run ${colors.yellow}agent-w project-data --help${colors.reset} for details.
   update                           Update Agent W from source and refresh configuration.
                                    Runs git pull in the source directory and setup-pm.
 
@@ -724,13 +769,17 @@ Example:
 };
 
 const args = process.argv.slice(2);
+const command = args[0];
 
-if (args.length === 0 || args.includes("-h") || args.includes("--help")) {
+// `project-data` prints its own, more detailed help.
+if (
+    args.length === 0 ||
+    (command !== "project-data" &&
+        (args.includes("-h") || args.includes("--help")))
+) {
     showHelp();
     process.exit(0);
 }
-
-const command = args[0];
 
 if (command === "install") {
     let destBase = args[1];
@@ -949,6 +998,9 @@ if (command === "install") {
 
         // Copy allowed skills to ~/.config/opencode/skills/
         copySkills(configDir);
+
+        // Copy slash commands to ~/.config/opencode/commands/
+        copyCommands(configDir);
     } catch (error) {
         console.error(
             `${colors.red}Error setting up PM configuration:${colors.reset}`,
@@ -956,6 +1008,8 @@ if (command === "install") {
         );
         process.exit(1);
     }
+} else if (command === "project-data") {
+    process.exitCode = runProjectData(args.slice(1));
 } else if (command === "update") {
     const origPath = path.resolve(__dirname, "..");
     console.log(`${colors.blue}Updating Agent W...${colors.reset}`);

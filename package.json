@@ -13,7 +13,8 @@
         "agent-w": "bin/cli.js"
     },
     "scripts": {
-        "test": "npm run test:plugin",
+        "test": "npm run test:project-data && npm run test:plugin",
+        "test:project-data": "node --test \"test/*.test.js\"",
         "test:plugin": "claude plugin validate .claude-plugin/plugin.json && claude plugin validate .claude-plugin/marketplace.json"
     },
     "keywords": [
