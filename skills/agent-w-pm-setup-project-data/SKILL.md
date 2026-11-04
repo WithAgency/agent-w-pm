@@ -2,11 +2,11 @@
 name: agent-w-pm-setup-project-data
 description:
     Use this skill when the user asks to set up, configure, update, review or
-    check the project data (GitHub repos, Linear team, Sentry org and projects,
-    Notion page, Google Drive folders, Figma folder) of the current project
-    folder, or runs /setup-project-data. Resolves the values through the
-    connected MCPs, asks the user to confirm, and stores them in the project's
-    AGENTS.md so every future conversation starts with them.
+    check the project data (Linear team, Sentry org and projects, Notion page,
+    Google Drive folders, Figma folder) of the current project folder, or runs
+    /setup-project-data. Resolves the values through the connected MCPs, asks
+    the user to confirm, and stores them in the project's AGENTS.md so every
+    future conversation starts with them.
 license: WTFPL
 metadata:
     author: with-madrid.com
@@ -17,8 +17,8 @@ metadata:
 Use this skill to create or update the **project data block** in the current
 project folder's `AGENTS.md`. OpenCode loads `AGENTS.md` into every
 conversation, so once the block exists, MCP calls and other skills can use the
-right Linear team, Sentry projects, Notion page, Drive folders, Figma folder and
-GitHub repos without searching for them.
+right Linear team, Sentry projects, Notion page, Drive folders, and Figma folder
+without searching for them.
 
 The block is read and written **only** through the `agent-w project-data`
 command. It validates the data, keeps everything else in `AGENTS.md` untouched,
@@ -34,12 +34,6 @@ sending data to the command; it is stored as YAML):
 {
     "schema_version": 2,
     "project": "IB Global Data Reconciliation",
-    "github": {
-        "repos": [
-            { "repo": "niji/ib-api", "role": "backend" },
-            { "repo": "niji/ib-web", "role": "frontend" }
-        ]
-    },
     "linear": { "team": "CAWL" },
     "sentry": { "org": "niji", "projects": ["ib-api", "ib-web"] },
     "notion": {
@@ -66,8 +60,6 @@ sending data to the command; it is stored as YAML):
 
 Rules that the command enforces:
 
-- `github.repos` is a list; the **first repo is the default**. `role` is
-  optional but helps ("backend", "frontend").
 - `linear.team` is the uppercase team **key** (for example `CAWL`), not the
   name.
 - Figma IDs are strings of digits. The `folder.id` is a Figma project.
@@ -110,9 +102,9 @@ agent-w project-data read
 ### 3. Choose the Integrations
 
 In setup mode, ask (multi-select) which integrations apply to this project:
-GitHub, Linear, Sentry, Notion, Google Drive, Figma. In update mode, only the
-ones the user wants to change. The project name defaults to the Notion page
-title if there is one, otherwise ask.
+Linear, Sentry, Notion, Google Drive, Figma. In update mode, only the ones the
+user wants to change. The project name defaults to the Notion page title if
+there is one, otherwise ask.
 
 ### 4. Resolve Each Integration
 
@@ -128,16 +120,8 @@ doing it by hand:
 agent-w project-data parse-url "<url>"
 ```
 
-It understands Notion, Figma folder, Google Drive folder, GitHub, Linear and
-Sentry URLs and prints JSON in the same shape as the stored data.
-
-**GitHub**
-
-1. List the clones: `ls code`. For each one, read its remote:
-   `git -C code/<name> remote get-url origin`, then run it through `parse-url`.
-2. Propose those repos, ask which to keep, in which order (first = default), and
-   an optional role for each. Repos that are not cloned yet can be added by
-   `owner/name`.
+It understands Notion, Figma folder, Google Drive folder, Linear and Sentry URLs
+and prints JSON in the same shape as the stored data.
 
 **Linear**
 

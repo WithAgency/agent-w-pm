@@ -108,11 +108,19 @@ This single command will:
     | `linear`          | Remote       | OAuth       | Linear issue tracking              |
     | `chrome-devtools` | Local        | None        | Chrome DevTools browser automation |
     | `sentry`          | Remote/Local | OAuth/Token | Sentry error tracking & debugging  |
+    | `notion`          | Remote       | OAuth       | Notion workspace integration       |
+    | `drive`           | Remote       | OAuth       | Google Drive file access           |
+    | `gmail`           | Remote       | OAuth       | Gmail email access                 |
+    | `slack`           | Remote       | OAuth       | Slack workspace integration        |
 
     > **Sentry:** During setup you will be prompted for your Sentry instance
     > URL. Press Enter to accept the default (`https://sentry.io`) for the SaaS
     > version. For self-hosted instances, enter your custom URL and provide an
     > access token when prompted.
+
+    > **Google (Drive/Gmail):** Requires a Google Cloud OAuth client created as
+    > a "Desktop app" type. The project must be enrolled in the Workspace
+    > Developer Preview Program (https://developers.google.com/workspace/preview).
 
 2. **Authenticate** each server that requires OAuth by running
    `opencode mcp auth <name>`, which opens a browser window for you to

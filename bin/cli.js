@@ -539,6 +539,47 @@ class SentryMCP extends MCPServer {
     }
 }
 
+/**
+ * Slack MCP server (remote, OAuth).
+ *
+ * The official Slack MCP server allows integrated apps to search channels,
+ * send messages, and perform other Slack actions through MCP clients.
+ *
+ * Slack provides a pre-registered OAuth client ID specifically for MCP clients,
+ * allowing automatic authentication without manual app creation. This works
+ * similarly to Figma/Notion/Linear OAuth flows.
+ *
+ * The pre-registered client ID (1601185624273.8899143856786) is officially
+ * supported by Slack for MCP use with OpenCode/Claude Code.
+ *
+ * See https://docs.slack.dev/ai/slack-mcp-server/ for details.
+ */
+class SlackMCP extends MCPServer {
+    get name() {
+        return "slack";
+    }
+
+    get requiresAuth() {
+        return true;
+    }
+
+    async generateConfig() {
+        return {
+            type: "remote",
+            url: "https://mcp.slack.com/mcp",
+            enabled: true,
+            oauth: {
+                clientId: "1601185624273.8899143856786",
+                redirectUri: "http://localhost:3118/callback",
+            },
+        };
+    }
+
+    async authenticate() {
+        return runOpenCodeAuth("slack");
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -598,6 +639,7 @@ const MCP_SERVERS = [
     new GoogleDriveMCP(),
     new GmailMCP(),
     new SentryMCP(),
+    new SlackMCP(),
 ];
 
 // ---------------------------------------------------------------------------
