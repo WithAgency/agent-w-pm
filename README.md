@@ -160,6 +160,7 @@ This command will:
    - `agent-w-pm-load-skills` - Discover and load project-specific skills on-demand from `./skills/`
    - `agent-w-pm-setup-project-data` - Set up or update the project data (see
      [Project Data](#project-data))
+   - `agent-w-pm-slack-channel-backup` - Back up Slack channels to Markdown transcripts and assets folders
    - `model-w-docs-generate` - Generate project documentation
 
 The PM agent is designed to be **safe and read-only** — it cannot create
@@ -174,6 +175,7 @@ users who need to work with development artifacts.
 - "What's the business impact of the recent cart abandonment errors?"
 - "List available project skills"
 - "Load project skills from ./skills"
+- "Back up #general Slack channel to Markdown"
 - "Generate documentation for this project"
 
 ### Project Data

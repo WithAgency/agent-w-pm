@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Features
+
+- **Slack Channel Backup Skill:** Add a specialized PM skill for backing up
+  Slack channels to chronological Markdown transcripts with pinned messages,
+  thread expansion, file downloads, and user name resolution via the Slack MCP
+  server and browser automation.
+
 ## [0.9.0] - 2026-05-19
 
 ### Features
